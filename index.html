@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Messdatenanalyse – Bewegungen</title>
+<style>
+:root { color-scheme: light dark; --bg: light-dark(#f4f7fb,#111923); --panel: light-dark(#ffffff,#1a2633); --panel2: light-dark(#f1f5f9,#202f3e); --text: light-dark(#172536,#edf4fb); --muted: light-dark(#607184,#a8bacb); --line: light-dark(#d9e2ec,#344657); --blue: light-dark(#1769aa,#72baff); --blue2: light-dark(#e7f2fc,#173a56); --orange: #e58a35; --green: #26966c; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif; background:var(--bg); color:var(--text); }
+#app { min-height:100vh; width:100%; background:var(--bg); border-radius:0; padding:24px clamp(14px,3vw,38px) 34px; }
+header { max-width:1440px; margin:0 auto 20px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+.eyebrow { color:var(--blue); font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+h1 { margin:5px 0 4px; font-size:clamp(24px,3vw,34px); letter-spacing:-.035em; }
+.subtitle { margin:0; color:var(--muted); font-size:14px; }
+.pill { border:1px solid var(--line); border-radius:999px; padding:8px 12px; color:var(--muted); font-size:12px; white-space:nowrap; }
+.layout { max-width:1440px; margin:auto; display:grid; grid-template-columns:320px minmax(0,1fr); gap:18px; align-items:start; }
+.panel { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:0 5px 20px #00000008; }
+.panel h2 { font-size:15px; margin:0 0 14px; letter-spacing:-.01em; }
+.section { padding-bottom:17px; margin-bottom:17px; border-bottom:1px solid var(--line); }
+.section:last-child { border:0; margin:0; padding:0; }
+.label { display:block; font-size:12px; color:var(--muted); font-weight:700; margin-bottom:8px; }
+.filebox { border:1px dashed var(--line); border-radius:12px; background:var(--panel2); padding:14px; }
+.filebox input { width:100%; font-size:12px; color:var(--muted); }
+.hint { font-size:11px; line-height:1.5; color:var(--muted); margin:8px 0 0; }
+.status { margin-top:10px; font-size:12px; color:var(--green); min-height:18px; }
+button, select { font:inherit; }
+button { border:1px solid var(--line); border-radius:9px; padding:9px 11px; color:var(--text); background:var(--panel2); cursor:pointer; font-size:12px; font-weight:700; }
+button:hover { border-color:var(--blue); }
+button.primary { color:white; background:#1769aa; border-color:#1769aa; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline:3px solid #63a9e8; outline-offset:2px; }
+.buttonrow { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+select { width:100%; border:1px solid var(--line); border-radius:9px; padding:10px; color:var(--text); background:var(--panel2); }
+.model-equation { background:var(--blue2); border-radius:11px; padding:13px; margin:12px 0; }
+.model-equation .small { font-size:10px; color:var(--muted); text-transform:uppercase; font-weight:800; letter-spacing:.1em; }
+#equation { font-family:Georgia,serif; font-size:clamp(18px,2vw,23px); font-weight:700; margin-top:6px; overflow-wrap:anywhere; }
+.param { margin:14px 0 17px; }
+.paramtop { display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; font-size:13px; }
+.paramtop strong { font-family:ui-monospace,monospace; color:var(--blue); font-size:14px; }
+input[type=range] { width:100%; accent-color:var(--blue); cursor:pointer; }
+.rangeends { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-top:2px; }
+.main { display:grid; gap:18px; min-width:0; }
+.chartpanel { padding:16px 18px 12px; }
+.charthead { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; }
+.charthead h2 { margin:0; }
+.legend { display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--muted); }
+.key { display:inline-flex; gap:6px; align-items:center; }
+.dot { width:9px; height:9px; border-radius:50%; background:var(--orange); }
+.linekey { width:18px; height:3px; background:var(--blue); border-radius:2px; }
+svg { width:100%; height:auto; display:block; overflow:hidden; }
+.axislabel { fill:var(--muted); font-size:12px; }
+.gridline { stroke:var(--line); stroke-width:1; }
+.axis { stroke:var(--muted); stroke-width:1.4; }
+.tick { fill:var(--muted); font-size:10px; }
+.point { fill:var(--orange); stroke:var(--panel); stroke-width:1.5; }
+.curve { fill:none; stroke:var(--blue); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.velocitycurve { fill:none; stroke:var(--green); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.velocitypoint { fill:var(--green); stroke:var(--panel); stroke-width:1.5; }
+.chartnote { color:var(--muted); font-size:11px; margin:4px 0 0; }
+.bottomgrid { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(250px,.9fr); gap:18px; }
+.tablewrap { overflow:auto; max-height:230px; border:1px solid var(--line); border-radius:10px; }
+table { border-collapse:collapse; width:100%; font-size:12px; }
+th,td { text-align:right; padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap; }
+th { position:sticky; top:0; background:var(--panel2); color:var(--muted); font-weight:700; }
+th:first-child,td:first-child { text-align:left; }
+.metric { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:12px; gap:12px; }
+.metric:last-child { border:0; }
+.metric span { color:var(--muted); }
+.callout { font-size:12px; color:var(--muted); line-height:1.55; background:var(--panel2); border-radius:10px; padding:12px; margin-top:12px; }
+.booknav { max-width:1440px; margin:0 auto 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.booksteps { display:flex; gap:8px; flex-wrap:wrap; }
+.bookstep { display:flex; align-items:center; gap:8px; }
+.bookstep button[aria-current="step"] { background:var(--blue); color:white; border-color:var(--blue); }
+.pageintro { max-width:1440px; margin:0 auto 16px; }
+.bookpage { max-width:1440px; margin:0 auto; }
+.bookpage[hidden] { display:none !important; }
+.pagecard { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:clamp(18px,3vw,30px); }
+.pageactions { display:flex; justify-content:space-between; gap:10px; margin-top:18px; flex-wrap:wrap; }
+.regionchart { touch-action:pan-y; cursor:crosshair; }
+.regionline { stroke:#d45b52; stroke-width:3; stroke-dasharray:7 5; cursor:ew-resize; }
+.regionhandle { fill:#d45b52; stroke:white; stroke-width:2; cursor:ew-resize; }
+.regionlabel { fill:var(--text); font-size:13px; font-weight:700; }
+footer { max-width:1440px; margin:18px auto 0; text-align:center; color:var(--muted); font-size:10px; }
+@media(max-width:640px) { .layout { grid-template-columns:1fr; } .bottomgrid { grid-template-columns:1fr; } header { flex-direction:column; } }
+
+.taskbox { margin:16px 0; padding:16px 18px; border:1px solid var(--border); border-left:5px solid var(--orange); border-radius:14px; background:color-mix(in srgb,var(--orange) 7%,var(--panel)); }
+.taskbox h3 { margin:0 0 8px; font-size:1rem; }
+.taskbox ol,.taskbox ul { margin:8px 0 0 1.2rem; padding:0; }
+.taskbox li { margin:6px 0; }
+.sicherung { margin:16px 0; padding:16px 18px; border:1px solid color-mix(in srgb,var(--green) 45%,var(--border)); border-radius:14px; background:color-mix(in srgb,var(--green) 8%,var(--panel)); }
+.sicherung h3 { margin:0 0 6px; color:var(--green); }
+.response-field { width:100%; min-height:76px; margin-top:10px; resize:vertical; }
+.report-equations { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:16px 0; }
+.report-equations .model-equation { margin:0; }
+.report-answers { margin-top:18px; }
+.report-answer { padding:12px 0; border-bottom:1px solid var(--border); }
+.report-answer strong { display:block; margin-bottom:5px; }
+.report-answer div { white-space:pre-wrap; min-height:1.4em; }
+@media(max-width:850px){.report-equations{grid-template-columns:1fr;}}
+@media print {
+ body { background:#fff !important; color:#111 !important; }
+ header,.booknav,#page8Back,#restartAnalysis,#downloadPdf,.no-print { display:none !important; }
+ .bookpage { display:none !important; }
+ #page8 { display:block !important; }
+ #page8 .pagecard,.panel { box-shadow:none !important; border-color:#bbb !important; }
+ #page8 .bottomgrid { grid-template-columns:1fr 1fr !important; }
+ .model-equation,.callout,.report-answer { break-inside:avoid; }
+ svg { max-height:240px; }
+ @page { size:A4; margin:12mm; }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+<div id="app">
+<header>
+  <div>
+    <div class="eyebrow">Physik · Datenanalyse</div>
+    <!--<h1>Physik · Datenanalyse</h1>-->
+    <!--<p class="subtitle">Finde durch eigenes Experimentieren ein mathematisches Modell für deine Messwerte.</p>-->
+  </div>
+  <!--<div class="pill">Manuelle Funktionsanpassung</div>-->
+</header>
+<nav class="booknav" aria-label="Seiten der Messdatenanalyse">
+  <div class="booksteps">
+    <div class="bookstep"><button id="goPage0" aria-current="step">0 · Start</button></div>
+    <div class="bookstep"><button id="goPage1">1 · Daten</button></div>
+    <div class="bookstep"><button id="goPage2">2 · Bereich</button></div>
+    <div class="bookstep"><button id="goPage3">3 · Wegmodell</button></div>
+    <div class="bookstep"><button id="goPage4">4 · Geschwindigkeitsmodell</button></div>
+    <div class="bookstep"><button id="goPage5">5 · Geschwindigkeit konstruieren</button></div>
+    <div class="bookstep"><button id="goPage6">6 · Beschleunigung konstruieren</button></div>
+    <div class="bookstep"><button id="goPage7">7 · Beschleunigung modellieren</button></div>
+    <div class="bookstep"><button id="goPage8">8 · Abschluss</button></div>
+  </div>
+  <div class="pill" id="pageIndicator">Seite 1 von 8</div>
+</nav>
+<!-- Page 0: Willkommen-->
+<section class="bookpage" id="page0">
+  <div class="pageintro">
+    <h1>Physik · Datenanalyse</h1>
+    <p class="subtitle">Finde durch eigenes Experimentieren ein mathematisches Modell für deine Messwerte.</p>
+  </div>
+  <div class="pagecard">
+    <div class="pageactions">
+      <div>
+        <p>In dieser Lerneinheit untersuchst Du die aufgenommenen Messwerte. Ziel ist es, passende Modellfunktionen zu finden und die im Versuch erfolgte Beschleunigung zu konstruieren. Dafür führst Du die folgende Schritte aus:</p>
+        <h4>Schritt 1</h4>
+        Messwerte hochladen: Lade die Messwerte hoch, die ihr im Versuch aufgenommen habt. Falls ihr die Messwerte nicht gespeichert habt, kannst Du die Beispieldaten verwenden.
+        <h4>Schritt 2</h4>
+        Auswahl der passenden Messwerte: Zunächst muss der Untersuchungsbereich eingegrenzt werden. Die Messung wurde vor Beginn des Versuchs gestartet und erst nach dem Versuch beendet. Betrachte die Messwerte und finde eine passende Eingrenzung.
+        <h4>Schritt 3</h4>
+        Modelle der zurückgelegten Strecke und der Geschwindigkeit erstellen: Hier wollen wir herausfinden, welche mathematischen Funktionen die zurückgelegte Strecke, sowie die Geschwindigkeit am besten beschreiben können. Wähle dafür an der linken Seite einen Funktionstypen aus und passe die blaue Kurve mit den Slidern so an, dass sie möglichst gut die Messpunkte widerspiegelt.
+        <h4>Schritt 4</h4>
+        Die Steigung untersuchen: Du kennst bereits die Steigung von linearen Funktionen. Wir können aber auch für andere Funktionen ihre Steigung herausfinden. Anders als bei linearen Funktionen ist sie aber von Punkt zu Punkt verschieden. Konstruiere die Steigung der Strecken- und der Geschwindigkeitsfunktionen an mehreren Stellen, sodass Du ein Bild des ganzen Verlaufs bekommst.
+        <h4>Schritt 5</h4>
+        Sicher hast Du festgestellt, dass die Steigung bzw. Änderung der zurückgelegten Strecke eine physikalische Bedeutung hat: Es ist die Geschwindigkeit. Genauso können wir aus der Geschwindigkeit die Beschleunigung konstruieren.
+        <h4>Schritt 6</h4>
+        Modelliere aus den einzelnen Punkten, die du in Schritt 5 konstruiert hast, nun wieder eine passende Funktion.
+      </div>
+      <button class="primary" id="page0Next">Weiter: Daten einlesen →</button>
+    </div>
+  </div>
+</section>
+
+<!--Page 1: Daten einlesen-->
+<section class="bookpage" id="page1" hidden>
+  <div class="pageintro">
+    <div class="eyebrow">Seite 1 · Vorbereitung</div>
+    <h1>Messdaten einlesen</h1>
+    <p class="subtitle">Finde durch eigenes Experimentieren ein mathematisches Modell für deine Messwerte.</p>
+  </div>
+  <div class="pagecard">
+    <div class="filebox">
+      <label class="label" for="csvFile">CSV-Datei auswählen</label>
+      <input id="csvFile" type="file" accept=".csv,.txt,text/csv">
+      <p class="hint">Trennzeichen Semikolon oder Komma; Dezimalpunkt oder Dezimalkomma. Die Datei wird nur in diesem Browser verarbeitet.</p>
+    </div>
+    <div class="buttonrow">
+      <button id="sampleBtn">Beispieldaten laden</button>
+      <button id="resetDataBtn">Daten zurücksetzen</button>
+    </div>
+    <div id="status" class="status" aria-live="polite">Beispieldaten sind geladen.</div>
+    <div class="pageactions">
+      <span class="hint">Tipp: Prüfe, ob die Zeit- und Wegwerte richtig eingelesen wurden.</span>
+      <button class="primary" id="page1Next">Weiter: Bereich auswählen →</button>
+    </div>
+  </div>
+</section>
+
+<!--Page 2: Bereich auswählen-->
+<section class="bookpage" id="page2" hidden>
+  <div class="pageintro">
+    <div class="eyebrow">Seite 2 · Ausschnitt festlegen</div>
+    <h1>Untersuchungsbereich auswählen</h1>
+    <p class="subtitle">Verschiebe die beiden roten Linien. Nur die Messwerte zwischen den Linien werden auf Seite 3 ausgewertet.</p>
+  </div>
+  <div class="pagecard">
+    <div class="charthead">
+      <h2>Weg-Zeit- und Geschwindigkeits-Zeit-Diagramm</h2>
+      <div class="legend">
+        <span class="key"><i class="dot"></i>Weg s</span>
+        <span class="key"><i style="display:inline-block;width:18px;border-top:3px solid var(--green)"></i> Geschwindigkeit v</span>
+        <span class="key"> <i style="display:inline-block;width:18px;border-top:3px dashed #d45b52"></i> Auswahlgrenzen</span>
+      </div>
+    </div>
+    <svg id="regionChart" class="regionchart" viewBox="0 0 900 430" role="img" aria-label="Diagramm zur Auswahl des Untersuchungsbereichs"></svg>
+    <p class="chartnote" id="regionSummary">Ziehe die roten Linien, um den Zeitbereich auszuwählen.</p>
+    <div class="taskbox">
+      <h3>Arbeitsauftrag 1 · Messdaten sichten</h3>
+      <ol>
+        <li>Beschreibe den Verlauf des Weges und der Geschwindigkeit zunächst ohne Formeln.</li>
+        <li>Markiere einen Zeitbereich, in dem ein charakteristischer Bewegungsabschnitt erkennbar ist.</li>
+        <li>Begründe deine Auswahl mit mindestens zwei Beobachtungen am Diagramm.</li>
+      </ol>
+    </div>
+    <div class="pageactions">
+      <button id="page2Back">← Zurück zu den Daten</button>
+      <button class="primary" id="applyRegion">Bereich übernehmen und auswerten →</button>
+    </div>
+  </div>
+</section>
+
+<!--Page 3: Bewegungen-->
+<section class="bookpage" id="page3" hidden>
+<div class="layout">
+<aside class="panel">
+  <div class="section">
+    <h2>02 · Funktion auswählen</h2>
+    <label class="label" for="functionType">Funktionstyp</label>
+    <select id="functionType">
+      <option value="constant">Konstant · s(t) = a</option>
+      <option value="linear">Linear · s(t) = a · t + b</option>
+      <option value="quadratic">Quadratisch · s(t) = a · t² + b · t + c</option>
+      <option value="exponential">Exponentiell · s(t) = a · e^(b · t) + c</option>
+    </select>
+    <div class="model-equation"><div class="small">Deine aktuelle Modellfunktion</div><div id="equation">s(t) = 1,0 · t + 0,0</div></div>
+  </div>
+  <div class="section">
+    <h2>03 · Parameter verändern</h2>
+    <div id="sliders"></div>
+    <div class="buttonrow"><button id="resetParams">Parameter zurücksetzen</button></div>
+  </div>
+  <div class="section">
+    <h2>04 · Untersuchen</h2>
+    <div class="metric"><span>Anzahl Messpunkte</span><strong id="pointCount">6</strong></div>
+    <div class="metric"><span>Zeitraum</span><strong id="timeSpan">0–5 s</strong></div>
+    <div class="callout">Verändere immer nur einen Parameter und beobachte, wie sich die Kurve verändert. Eine automatische Anpassung findet bewusst nicht statt – du entwickelst das Modell selbst.</div>
+  </div>
+</aside>
+<main class="main">
+  <section class="panel chartpanel">
+    <div class="charthead"><h2>Weg-Zeit-Diagramm</h2><div class="legend"><span class="key"><i class="dot"></i>Messwerte</span><span class="key"><i class="linekey"></i>Dein Modell</span></div></div>
+    <svg id="chart" viewBox="0 0 900 510" role="img" aria-label="Weg-Zeit-Diagramm mit Messpunkten und manuell angepasster Modellfunktion"></svg>
+    <p class="chartnote">Die orangefarbenen Punkte zeigen die importierten Messwerte. Die blaue Kurve zeigt deine aktuell eingestellte Funktion; übernommene Kurven bleiben zum Vergleichen sichtbar.</p>
+    <div class="taskbox"><h3>Arbeitsauftrag 2 · Weg-Zeit-Zusammenhang modellieren</h3><ol><li>Wähle eine passende Funktionsart für den Weg-Zeit-Verlauf.</li><li>Verändere die Parameter so, dass die Modellkurve die Messpunkte möglichst gut beschreibt.</li><li>Deute die Bedeutung der Parameter für die Bewegung.</li></ol></div><div class="sicherung"><h3>Sicherungssatz 1</h3><label for="secureS">Formuliere: Was verrät der Verlauf beziehungsweise die Steigung eines Weg-Zeit-Graphen über die Bewegung?</label><textarea class="response-field secure-input" id="secureS" data-report-title="Sicherungssatz zum Weg-Zeit-Graphen" placeholder="Der Weg-Zeit-Graph ..."></textarea></div><div class="pageactions"><button id="saveCurve">Aktuelle Kurve übernehmen</button><button class="primary" id="toVelocityPage">Weiter: Geschwindigkeit modellieren →</button></div>
+  </section>
+  <div class="bottomgrid">
+    <section class="panel"><h2>Messwerttabelle</h2><div class="tablewrap"><table><thead><tr><th>Zeit t (s)</th><th>Weg s (m)</th></tr></thead><tbody id="dataRows"></tbody></table></div></section>
+    <section class="panel"><h2>Deine Modellierung</h2>
+      <div class="metric"><span>Funktionstyp</span><strong id="modelName">Linear</strong></div>
+      <div class="metric"><span>Parameter a</span><strong id="valueA">1,00</strong></div>
+      <div class="metric"><span>Parameter b</span><strong id="valueB">0,00</strong></div>
+      <div class="metric" id="rowC"><span>Parameter c</span><strong id="valueC">0,00</strong></div>
+      <div class="callout"><strong>Arbeitsauftrag:</strong> Stelle die Parameter so ein, dass die Funktion möglichst gut zu den Messpunkten passt. Begründe anschließend, warum du diesen Funktionstyp gewählt hast. Prüfe auch, ob das Modell physikalisch sinnvoll ist.</div>
+    </section>
+  </div>
+</main>
+</div>
+<footer>Lokale Verarbeitung im Browser · Messdaten werden nicht hochgeladen oder gespeichert</footer>
+</section>
+
+<section class="bookpage" id="page4" hidden>
+<div class="layout">
+<aside class="panel">
+  <div class="section"><h2>02 · Funktion auswählen</h2><label class="label" for="vFunctionType">Funktionstyp</label>
+    <select id="vFunctionType"><option value="constant">Konstant · v(t) = a</option><option value="linear">Linear · v(t) = a · t + b</option><option value="quadratic">Quadratisch · v(t) = a · t² + b · t + c</option><option value="exponential">Exponentiell · v(t) = a · e^(b · t) + c</option></select>
+    <div class="model-equation"><div class="small">Deine aktuelle Modellfunktion</div><div id="vEquation">v(t) = 0,50</div></div>
+  </div>
+  <div class="section"><h2>03 · Parameter verändern</h2><div id="vSliders"></div><div class="buttonrow"><button id="vResetParams">Parameter zurücksetzen</button></div></div>
+  <div class="section"><h2>04 · Untersuchen</h2><div class="metric"><span>Anzahl Messpunkte</span><strong id="vPointCount">0</strong></div><div class="metric"><span>Zeitraum</span><strong id="vTimeSpan">–</strong></div><div class="callout">Passe die Modellfunktion manuell an die Geschwindigkeitswerte an. Die Achsenskalierung bleibt beim Betätigen der Schieberegler unverändert.</div></div>
+</aside>
+<main class="main">
+  <section class="panel chartpanel"><div class="charthead"><h2>Geschwindigkeits-Zeit-Diagramm</h2><div class="legend"><span class="key"><i class="dot" style="background:var(--green)"></i>Messwerte</span><span class="key"><i class="linekey"></i>Dein Modell</span></div></div><svg id="vChart" viewBox="0 0 900 510" role="img" aria-label="Geschwindigkeits-Zeit-Diagramm mit Messpunkten und Modellfunktion"></svg><p class="chartnote">Grüne Punkte sind importierte Geschwindigkeitswerte. Die blaue Kurve ist dein Modell. Fehlende Geschwindigkeitswerte werden ausgelassen.</p><div class="taskbox"><h3>Arbeitsauftrag 3 · Geschwindigkeit modellieren</h3><ol><li>Vergleiche die Geschwindigkeitsmesswerte mit dem zuvor untersuchten Weg-Zeit-Verlauf.</li><li>Fitte eine geeignete Funktion an die Geschwindigkeitsmesswerte.</li><li>Notiere, in welchen Zeitabschnitten das Objekt schneller, langsamer oder annähernd gleichförmig ist.</li></ol></div><div class="pageactions"><button id="page4Back">← Zurück zum Wegmodell</button><button class="primary" id="toSlopePage">Weiter: Steigung untersuchen →</button></div></section>
+  <div class="bottomgrid"><section class="panel"><h2>Messwerttabelle</h2><div class="tablewrap"><table><thead><tr><th>Zeit t (s)</th><th>Geschwindigkeit v (m/s)</th></tr></thead><tbody id="vDataRows"></tbody></table></div></section><section class="panel"><h2>Deine Modellierung</h2><div class="metric"><span>Funktionstyp</span><strong id="vModelName">Konstant</strong></div><div class="metric"><span>Parameter a</span><strong id="vValueA">0,50</strong></div><div class="metric" id="vRowB"><span>Parameter b</span><strong id="vValueB">0,00</strong></div><div class="metric" id="vRowC"><span>Parameter c</span><strong id="vValueC">0,00</strong></div><div class="callout"><strong>Arbeitsauftrag:</strong> Finde eine Modellfunktion, die den Verlauf der Geschwindigkeit möglichst gut beschreibt, und begründe deine Wahl.</div></section></div>
+</main></div><footer>Lokale Verarbeitung im Browser · Messdaten werden nicht hochgeladen oder gespeichert</footer>
+</section>
+<section class="bookpage" id="page5" hidden>
+  <div class="pageintro"><div class="eyebrow">Seite 5 · Steigung untersuchen</div><h1>Die Steigung an verschiedenen Stellen bestimmen</h1><p class="subtitle">Klicke im Weg-Zeit-Diagramm auf eine Stelle der Kurve. Passe die Steigung der eingezeichneten Geraden mit dem Slider an, bis sie die Kurve dort möglichst gut berührt. Übernimm anschließend den Punkt (t, Steigung) in das Steigungsdiagramm.</p></div>
+  <div class="layout">
+    <aside class="panel">
+      <div class="section"><h2>1 · Stelle auswählen</h2><div class="metric"><span>Ausgewählte Zeit t</span><strong id="slopeXLabel">2,00 s</strong></div><p class="hint">Du kannst auch direkt in das Diagramm klicken, um die Stelle zu wechseln.</p></div>
+      <div class="section"><h2>2 · Tangente anpassen</h2><div class="model-equation"><div class="small">Deine lineare Funktion</div><div id="tangentEquation">s(t) = 1,00 · (t − 2,00) + 2,00</div></div><div class="param"><div class="paramtop"><label for="slopeSlider">Steigung m</label><strong id="slopeValue">1,00</strong></div><input id="slopeSlider" type="range" min="-10" max="10" step="0.05" value="1"><div class="rangeends"><span>−10</span><span>+10</span></div></div><div class="callout">Die Gerade geht durch den ausgewählten Punkt. Verändere ihre Steigung, bis sie sich dort an die Kurve anschmiegt.</div><div class="buttonrow"><button class="primary" id="addSlopePoint">Punkt (t, m) übernehmen</button></div><p class="status" id="slopeStatus" aria-live="polite"></p></div>
+      <div class="buttonrow"><button id="clearSlopePoints">Steigungspunkte löschen</button></div>
+    </aside>
+    <main class="main">
+      <section class="panel chartpanel"><div class="charthead"><h2>Modellkurve, Tangente und Steigungspunkte</h2><div class="legend"><span class="key"><i class="linekey"></i>Modellkurve</span><span class="key">Tangente</span><span class="key"><i style="display:inline-block;width:18px;border-top:3px solid var(--green)"></i>Geschwindigkeit v</span><span class="key"><i class="dot"></i>Steigungspunkte</span></div></div><svg id="tangentChart" viewBox="0 0 900 510" role="img" aria-label="Weg-Zeit-Diagramm mit Tangente und übernommenen Steigungspunkten; anklicken, um die Stelle für die Tangente auszuwählen"></svg><p class="chartnote">Die orange Markierung zeigt die ausgewählte Stelle. Übernommene Steigungspunkte werden im selben Diagramm über eine rechte Zusatzachse für die Steigung (m/s) dargestellt. Die Achsenskalierung bleibt beim Verändern der Tangente unverändert.</p></section>
+      <div class="taskbox"><h3>Arbeitsauftrag 4 · Geschwindigkeit als Steigung erarbeiten</h3><ol><li>Konstruiere an mindestens vier verschiedenen Stellen eine Tangente an den Weg-Zeit-Graphen.</li><li>Übernimm die Steigungswerte und vergleiche sie mit den Geschwindigkeitsmesswerten.</li><li>Erkläre mögliche Abweichungen zwischen Konstruktion und Messwerten.</li></ol></div><div class="sicherung"><h3>Sicherungssatz 2</h3><label for="secureV">Formuliere den Zusammenhang zwischen Weg und Geschwindigkeit.</label><textarea class="response-field secure-input" id="secureV" data-report-title="Sicherungssatz: Weg und Geschwindigkeit" placeholder="Die Geschwindigkeit zu einem Zeitpunkt ..."></textarea></div><div class="pageactions"><button id="page5Back">← Zurück zur Modellierung</button><button class="primary" id="toAccelerationPage">Weiter: Beschleunigung konstruieren →</button></div>
+    </main>
+  </div>
+</section>
+
+<section class="bookpage" id="page6" hidden>
+ <div class="pageintro"><div class="eyebrow">Seite 6 · Beschleunigung erarbeiten</div><h1>Die Steigung der Geschwindigkeit bestimmen</h1><p class="subtitle">Klicke auf die aus den CSV-Messwerten gebildete Geschwindigkeitskurve. Passe die Tangente an den Messwertverlauf an und übernimm ihre Steigung als Beschleunigungspunkt (t, a).</p></div>
+ <div class="layout"><aside class="panel"><div class="section"><h2>1 · Stelle auswählen</h2><div class="metric"><span>Zeit t</span><strong id="accXLabel">0,00 s</strong></div></div><div class="section"><h2>2 · Tangente anpassen</h2><div class="model-equation"><div class="small">Tangente an v(t)</div><div id="accTangentEquation">v(t) = 0,00 · (t − 0,00) + 0,00</div></div><div class="param"><div class="paramtop"><label for="accSlopeSlider">Steigung = Beschleunigung a</label><strong id="accSlopeValue">0,00</strong></div><input id="accSlopeSlider" type="range" min="-2" max="2" step="0.01" value="0"><div class="rangeends"><span>−2</span><span>+2</span></div></div><div class="buttonrow"><button class="primary" id="addAccelerationPoint">Punkt (t, a) übernehmen</button></div><p class="status" id="accStatus" aria-live="polite"></p></div><div class="buttonrow"><button id="clearAccelerationPoints">Beschleunigungspunkte löschen</button></div></aside>
+ <main class="main"><section class="panel chartpanel"><div class="charthead"><h2>Geschwindigkeitsmesswerte, Tangente und Beschleunigungspunkte</h2><div class="legend"><span class="key"><i style="display:inline-block;width:18px;border-top:3px solid var(--green)"></i>v-Messwerte</span><span class="key">Tangente</span><span class="key"><i class="dot"></i>Beschleunigungspunkte</span></div></div><svg id="accTangentChart" viewBox="0 0 900 510" role="img" aria-label="Geschwindigkeits-Zeit-Diagramm mit Tangente und konstruierten Beschleunigungspunkten"></svg><p class="chartnote">Die grüne Kurve verbindet ausschließlich die importierten Geschwindigkeitsmesswerte. Die Geschwindigkeit ist fest von −1 bis 1 m/s skaliert. Die rechte Achse zeigt die konstruierte Beschleunigung in m/s².</p><div class="taskbox"><h3>Arbeitsauftrag 5 · Beschleunigung konstruieren</h3><ol><li>Lege an mindestens vier Stellen Tangenten an den Verlauf der Geschwindigkeitsmesswerte.</li><li>Übernimm die Steigungen als Beschleunigungspunkte.</li><li>Untersuche, wann die Beschleunigung positiv, negativ oder ungefähr null ist.</li></ol></div><div class="sicherung"><h3>Sicherungssatz 3</h3><label for="secureA">Formuliere den Zusammenhang zwischen Geschwindigkeit und Beschleunigung.</label><textarea class="response-field secure-input" id="secureA" data-report-title="Sicherungssatz: Geschwindigkeit und Beschleunigung" placeholder="Die Beschleunigung zu einem Zeitpunkt ..."></textarea></div><div class="pageactions"><button id="page6Back">← Zur Geschwindigkeitskonstruktion</button><button class="primary" id="toAccelerationFit">Weiter: Beschleunigung modellieren →</button></div></section></main></div>
+</section>
+<section class="bookpage" id="page7" hidden>
+ <div class="pageintro"><div class="eyebrow">Seite 7 · Beschleunigungsmodell</div><h1>Beschleunigungspunkte mit einer Modellfunktion beschreiben</h1><p class="subtitle">Passe eine Funktion an die auf Seite 6 konstruierten Beschleunigungspunkte an. Die Skalierung bleibt beim Verschieben der Regler fest.</p></div>
+ <div class="layout"><aside class="panel"><div class="section"><h2>1 · Funktion auswählen</h2><label class="label" for="aFunctionType">Funktionstyp</label><select id="aFunctionType"><option value="constant">Konstant · a(t)=A</option><option value="linear">Linear · a(t)=A·t+B</option><option value="quadratic">Quadratisch · a(t)=A·t²+B·t+C</option></select><div class="model-equation"><div class="small">Aktuelle Modellfunktion</div><div id="aEquation">a(t) = 0,00</div></div></div><div class="section"><h2>2 · Parameter verändern</h2><div id="aSliders"></div><div class="buttonrow"><button id="aResetParams">Parameter zurücksetzen</button></div></div></aside>
+ <main class="main"><section class="panel chartpanel"><div class="charthead"><h2>Beschleunigungs-Zeit-Diagramm</h2><div class="legend"><span class="key"><i class="dot"></i>Konstruierte Punkte</span><span class="key"><i class="linekey"></i>Modell</span></div></div><svg id="aChart" viewBox="0 0 900 510" role="img" aria-label="Beschleunigungs-Zeit-Diagramm mit Modellfunktion"></svg><p class="chartnote">Die Modellkurve wird am Rand des Diagrammbereichs abgeschnitten und ist nur innerhalb der Zeichenfläche sichtbar.</p><div class="taskbox"><h3>Arbeitsauftrag 6 · Beschleunigung modellieren und deuten</h3><ol><li>Fitte eine geeignete Modellfunktion an deine konstruierten Beschleunigungspunkte.</li><li>Prüfe, ob das Modell zu deinen Beobachtungen an s(t) und v(t) passt.</li><li>Beschreibe die gesamte Bewegung in drei Phasen mit den Begriffen Weg, Geschwindigkeit und Beschleunigung.</li></ol></div><div class="sicherung"><h3>Abschließender Sicherungssatz</h3><label for="secureFinal">Fasse den Zusammenhang von s(t), v(t) und a(t) in eigenen Worten zusammen.</label><textarea class="response-field secure-input" id="secureFinal" data-report-title="Gesamtzusammenhang von Weg, Geschwindigkeit und Beschleunigung" placeholder="Weg, Geschwindigkeit und Beschleunigung hängen zusammen, indem ..."></textarea></div><div class="pageactions"><button id="page7Back">← Zur Konstruktion</button><button class="primary" id="toSummary">Weiter: Abschlussübersicht →</button></div></section></main></div>
+</section>
+<section class="bookpage" id="page8" hidden>
+ <div class="pageintro"><div class="eyebrow">Seite 8 · Abschluss</div><h1>Bewegung im Überblick</h1><p class="subtitle">Die erzeugten Graphen, Modellfunktionen und selbst formulierten Sicherungssätze werden zu einem Abschlussbericht zusammengeführt.</p></div>
+ <div class="pagecard"><div class="no-print" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><label>Name<input id="reportName" type="text" placeholder="Name"></label><label>Datum<input id="reportDate" type="date"></label></div><div class="report-equations"><div class="model-equation"><div class="small">Wegmodell</div><div id="reportSEquation">–</div></div><div class="model-equation"><div class="small">Geschwindigkeitsmodell</div><div id="reportVEquation">–</div></div><div class="model-equation"><div class="small">Beschleunigungsmodell</div><div id="reportAEquation">–</div></div></div><div class="bottomgrid"><section class="panel chartpanel"><h2>Weg s(t)</h2><div class="model-equation"><div class="small">Gefittete Funktion</div><div id="summarySEquation">–</div></div><svg id="summaryS" viewBox="0 0 900 360"></svg></section><section class="panel chartpanel"><h2>Geschwindigkeit v(t)</h2><div class="model-equation"><div class="small">Gefittete Funktion</div><div id="summaryVEquation">–</div></div><svg id="summaryV" viewBox="0 0 900 360"></svg></section></div><section class="panel chartpanel" style="margin-top:18px"><h2>Beschleunigung a(t)</h2><div class="model-equation"><div class="small">Gefittete Funktion</div><div id="summaryAEquation">–</div></div><svg id="summaryA" viewBox="0 0 900 360"></svg></section><section class="panel report-answers"><h2>Formulierte Sicherungssätze</h2><div id="reportIdentity" class="hint"></div><div id="reportAnswers"></div></section><div class="callout"><strong>Zusammenhang:</strong> Die Steigung des Weg-Zeit-Graphen entspricht der Geschwindigkeit. Die Steigung des Geschwindigkeits-Zeit-Graphen entspricht der Beschleunigung.</div><div class="pageactions"><button id="page8Back">← Zur Beschleunigungsmodellierung</button><button id="restartAnalysis">Zurück zum Anfang</button><button class="primary" id="downloadPdf">PDF-Bericht herunterladen</button></div></div>
+</section>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const defaults = {
+    constant: {a:0.5,b:0.0,c:0.0},
+    linear: {a:1.0,b:0.0,c:0.0},
+    quadratic: {a:0.2,b:0.2,c:0.0},
+    exponential: {a:0.5,b:0.2,c:0.0}
+  };
+  let allData = [[0.0,0.0,null],[0.1,0.005,0.07],[0.15,0.01,0.1],[0.2,0.015,0.13],[0.23,0.02,0.14],[0.27,0.025,0.16],[0.3,0.03,0.18],[0.32,0.035,0.19],[0.35,0.04,0.21],[0.37,0.045,0.22],[0.39,0.05,0.23],[0.42,0.055,0.24],[0.44,0.06,0.25],[0.46,0.065,0.26],[0.47,0.07,0.27],[0.49,0.075,0.28],[0.51,0.08,0.29],[0.53,0.085,0.29],[0.54,0.09,0.3],[0.56,0.095,0.31],[0.58,0.1,0.32],[0.59,0.105,0.33],[0.61,0.11,0.34],[0.62,0.115,0.34],[0.64,0.12,0.35],[0.65,0.125,0.36],[0.66,0.13,0.36],[0.68,0.135,0.37],[0.69,0.14,0.37],[0.7,0.145,0.38],[0.72,0.15,0.39],[0.73,0.155,0.39],[0.74,0.16,0.4],[0.76,0.165,0.41],[0.77,0.17,0.41],[0.78,0.175,0.42],[0.79,0.18,0.42],[0.8,0.185,0.43],[0.81,0.19,0.44],[0.83,0.195,0.44],[0.84,0.2,0.45],[0.85,0.205,0.46],[0.86,0.21,0.46],[0.87,0.215,0.47],[0.88,0.22,0.47],[0.89,0.225,0.48],[0.9,0.23,0.48],[0.91,0.235,0.49],[0.92,0.24,0.49],[0.93,0.245,0.5],[0.94,0.25,0.5],[0.95,0.255,0.51],[0.96,0.26,0.51],[0.97,0.265,0.52],[0.98,0.27,0.52],[0.99,0.275,0.52],[1.0,0.28,0.53],[1.01,0.285,0.54],[1.02,0.29,0.54],[1.03,0.295,0.54],[1.04,0.3,0.55],[1.05,0.305,0.55],[1.06,0.31,0.56],[1.06,0.315,0.56],[1.07,0.32,0.57],[1.08,0.325,0.57],[1.09,0.33,0.57],[1.1,0.335,0.58],[1.11,0.34,0.58],[1.12,0.345,0.59],[1.13,0.35,0.59],[1.13,0.355,0.59],[1.14,0.36,0.6],[1.15,0.365,0.6],[1.16,0.37,0.6],[1.17,0.375,0.61],[1.18,0.38,0.62],[1.18,0.385,0.62],[1.19,0.39,0.62],[1.2,0.395,0.63],[1.21,0.4,0.63],[1.22,0.405,0.63],[1.22,0.41,0.63],[1.23,0.415,0.64],[1.24,0.42,0.64],[1.25,0.425,0.64],[1.25,0.43,0.64],[1.26,0.435,0.64],[1.27,0.44,0.65],[1.28,0.445,0.66],[1.29,0.45,0.66],[1.29,0.455,0.66],[1.3,0.46,0.66],[1.31,0.465,0.66],[1.32,0.47,0.67],[1.32,0.475,0.67],[1.33,0.48,0.67],[1.34,0.485,0.68],[1.35,0.49,0.68],[1.35,0.495,0.68],[1.36,0.5,0.67],[1.37,0.505,0.68],[1.37,0.51,0.68],[1.38,0.515,0.68],[1.39,0.52,0.68],[1.4,0.525,0.68],[1.4,0.53,0.67],[1.41,0.535,0.67],[1.42,0.54,0.61],[1.43,0.545,0.49],[1.52,0.55,0.19],[1.54,0.555,0.2],[1.57,0.56,0.14],[1.62,0.565,0.09],[1.68,0.57,0.07],[1.89,0.575,0.05],[1.97,0.58,0.08],[2.03,0.585,0.1],[2.07,0.59,0.1],[2.12,0.595,null]];
+  let data = allData.slice();
+  let regionMin = 0, regionMax = 5, activePage = 1, draggingLine = null;
+  let params = {...defaults.linear};
+  let currentType = 'linear';
+  let savedCurves = [], slopePoints = [], selectedTime = 2, tangentSlope = 1;
+  let vCurrentType='constant', vParams={...defaults.constant};
+  let accelerationPoints=[], accSelectedTime=0, accTangentSlope=0, aCurrentType='constant', aParams={a:0,b:0,c:0};
+  const fmt = (n,d=2) => Number(n).toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const nice = n => { if (!Number.isFinite(n)) return 1; const raw=n/5; const p=Math.pow(10,Math.floor(Math.log10(Math.max(raw,1e-9)))); const q=raw/p; return (q<=1?1:q<=2?2:q<=5?5:10)*p; };
+  function setStatus(msg, bad=false) { $('status').textContent=msg; $('status').style.color=bad?'#d45b52':'var(--green)'; }
+  function parseCSV(text) {
+    const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    if(lines.length<2) throw new Error('Die Datei enthält zu wenige Zeilen.');
+    const first=lines[0];
+    const semis=(first.match(/;/g)||[]).length, commas=(first.match(/,/g)||[]).length, tabs=(first.match(/\t/g)||[]).length;
+    const delim= tabs>semis&&tabs>commas?'\t':semis>=commas?';':',';
+    const split=line=>line.split(delim).map(x=>x.trim().replace(/^"|"$/g,''));
+    let start=0, head=split(lines[0]);
+    const numericPair = row => row.length>=2 && row.slice(0,2).every(v=>/^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)(?:e[+-]?\d+)?$/i.test(v.replace(/\s/g,'')));
+    if(!numericPair(head)) start=1;
+    const rows=[];
+    for(let i=start;i<lines.length;i++) {
+      const cells=split(lines[i]); if(cells.length<2) continue;
+      const pair=cells.slice(0,2).map(v=>Number(v.replace(/\s/g,'').replace(',','.')));
+      const rawV=(cells[2]??'').replace(/\s/g,'').replace(',','.');
+      const velocity=rawV===''?null:Number(rawV);
+      if(pair.every(Number.isFinite)) rows.push([pair[0],pair[1],Number.isFinite(velocity)?velocity:null]);
+    }
+    if(rows.length<2) throw new Error('Es wurden weniger als zwei gültige Zahlenpaare gefunden. Prüfe Trennzeichen und Spalten.');
+    return rows;
+  }
+  function updateTable() {
+    $('dataRows').innerHTML=data.map(r=>`<tr><td>${fmt(r[0],3)}</td><td>${fmt(r[1],3)}</td></tr>`).join('');
+    $('pointCount').textContent=data.length;
+    const ts=data.map(r=>r[0]); $('timeSpan').textContent=`${fmt(Math.min(...ts),1)}–${fmt(Math.max(...ts),1)} s`;
+  }
+  function resetRegion(){ if(!allData.length){regionMin=0;regionMax=1;return;} const xs=allData.map(r=>r[0]); regionMin=Math.min(...xs); regionMax=Math.max(...xs); if(regionMin===regionMax) regionMax=regionMin+1; }
+  function showPage(n){
+    activePage=n;
+    [0,1,2,3,4,5,6,7,8].forEach(i=>{
+      $('page'+i).hidden=i!==n;
+      if($('goPage'+i))$('goPage'+i).setAttribute('aria-current',i===n?'step':'false');
+    });
+    $('pageIndicator').textContent=`Seite ${n} von 8`;if(n===2)drawRegion();
+    if(n===3)refresh();
+    if(n===4)vRefresh();
+    if(n===5)drawTangent();
+    if(n===6)drawAccelerationConstruction();
+    if(n===7)refreshAccelerationFit();
+    if(n===8)drawSummary();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function drawRegion(){
+    const svg=$('regionChart'),W=900,H=430,L=75,R=75,T=28,B=55,pw=W-L-R,ph=H-T-B;
+    if(!allData.length){svg.innerHTML='<text x="450" y="210" text-anchor="middle" fill="currentColor" font-size="18">Lade zuerst Messdaten auf Seite 1.</text>';$('regionSummary').textContent='Noch keine Messdaten geladen.';return;}
+    const xs=allData.map(r=>r[0]),ys=allData.map(r=>r[1]),vs=allData.map(r=>r[2]).filter(Number.isFinite);let xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);if(xmax===xmin)xmax=xmin+1;if(ymax===ymin)ymax=ymin+1;const xp=(xmax-xmin)*.06,yp=(ymax-ymin)*.12;xmin-=xp;xmax+=xp;ymin-=yp;ymax+=yp;let vmin=-1,vmax=1;const sx=x=>L+(x-xmin)/(xmax-xmin)*pw,sy=y=>T+ph-(y-ymin)/(ymax-ymin)*ph,sv=v=>T+ph-(v-vmin)/(vmax-vmin)*ph;let out='';
+    for(let i=0;i<=5;i++){const x=xmin+(xmax-xmin)*i/5,px=sx(x),y=ymin+(ymax-ymin)*i/5,py=sy(y),v=vmin+(vmax-vmin)*i/5;out+=`<line class="gridline" x1="${px}" y1="${T}" x2="${px}" y2="${T+ph}"/><text class="tick" x="${px}" y="${T+ph+20}" text-anchor="middle">${fmt(x,2)}</text><line class="gridline" x1="${L}" y1="${py}" x2="${L+pw}" y2="${py}"/><text class="tick" x="${L-10}" y="${py+4}" text-anchor="end">${fmt(y,2)}</text><text class="tick" x="${L+pw+10}" y="${sv(v)+4}" text-anchor="start">${fmt(v,2)}</text>`;}
+    out+=`<line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${T+ph}"/><line class="axis" x1="${L+pw}" y1="${T}" x2="${L+pw}" y2="${T+ph}"/><line class="axis" x1="${L}" y1="${T+ph}" x2="${L+pw}" y2="${T+ph}"/><text class="axislabel" x="${L+pw/2}" y="${H-10}" text-anchor="middle">Zeit t (s)</text><text class="axislabel" transform="translate(18 ${T+ph/2}) rotate(-90)" text-anchor="middle">Weg s (m)</text><text class="axislabel" transform="translate(${W-16} ${T+ph/2}) rotate(-90)" text-anchor="middle">Geschwindigkeit v (m/s)</text>`;
+    let sd='',vd='';allData.forEach(([x,y,v])=>{const inside=x>=Math.min(regionMin,regionMax)&&x<=Math.max(regionMin,regionMax);sd+=(sd?' L':'M')+sx(x)+' '+sy(y);out+=`<circle cx="${sx(x)}" cy="${sy(y)}" r="4.8" fill="${inside?'var(--orange)':'var(--muted)'}" opacity="${inside?1:.4}"/>`;if(Number.isFinite(v)){vd+=(vd?' L':'M')+sx(x)+' '+sv(v);out+=`<circle cx="${sx(x)}" cy="${sv(v)}" r="4.2" fill="var(--green)" opacity="${inside?1:.35}"/>`;}});if(sd)out+=`<path d="${sd}" fill="none" stroke="var(--orange)" stroke-width="2" opacity=".65"/>`;if(vd)out+=`<path class="velocitycurve" d="${vd}"/>`;
+    [regionMin,regionMax].forEach((x,i)=>{const px=sx(Math.max(xmin,Math.min(xmax,x)));out+=`<line class="regionline" data-line="${i}" x1="${px}" y1="${T}" x2="${px}" y2="${T+ph}"/><rect class="regionhandle" data-line="${i}" x="${px-7}" y="${T+ph-12}" width="14" height="24" rx="4"/><text class="regionlabel" x="${px+9}" y="${T+17}">${i===0?'Start':'End'}: ${fmt(x,2)} s</text>`;});svg.innerHTML=out;const count=allData.filter(r=>r[0]>=Math.min(regionMin,regionMax)&&r[0]<=Math.max(regionMin,regionMax)).length;$('regionSummary').textContent=`Ausgewählt: ${fmt(Math.min(regionMin,regionMax),2)}–${fmt(Math.max(regionMin,regionMax),2)} s · ${count} Messpunkte im Bereich.`;
+    svg.querySelectorAll('[data-line]').forEach(el=>{el.addEventListener('pointerdown',e=>{draggingLine=Number(el.getAttribute('data-line'));svg.setPointerCapture(e.pointerId);e.preventDefault();});});
+  }
+  $('regionChart').addEventListener('pointermove',e=>{if(draggingLine===null||!allData.length)return;const svg=$('regionChart'),rect=svg.getBoundingClientRect(),px=(e.clientX-rect.left)/rect.width*900,L=75,R=75,pw=900-L-R,xs=allData.map(r=>r[0]);let lo=Math.min(...xs),hi=Math.max(...xs);if(lo===hi)hi=lo+1;lo-=(hi-lo)*.06;hi+=(hi-lo)*.06;let x=lo+(px-L)/pw*(hi-lo);x=Math.max(Math.min(...xs),Math.min(Math.max(...xs),x));if(draggingLine===0)regionMin=Math.min(x,regionMax);else regionMax=Math.max(x,regionMin);drawRegion();});
+  $('regionChart').addEventListener('pointerup',()=>{draggingLine=null;});$('regionChart').addEventListener('pointercancel',()=>{draggingLine=null;});
+  function fn(x) {
+    const {a,b,c}=params;
+    if(currentType==='constant') return a;
+    if(currentType==='linear') return a*x+b;
+    if(currentType==='quadratic') return a*x*x+b*x+c;
+    const exp=Math.max(-40,Math.min(40,b*x));
+    return a*Math.exp(exp)+c;
+  }
+  function updateEquation() {
+    const {a,b,c}=params;
+    let eq='';
+    if(currentType==='constant') eq=`s(t) = ${fmt(a)}`;
+    if(currentType==='linear') eq=`s(t) = ${fmt(a)} · t ${b<0?'−':'+'} ${fmt(Math.abs(b))}`;
+    if(currentType==='quadratic') eq=`s(t) = ${fmt(a)} · t² ${b<0?'−':'+'} ${fmt(Math.abs(b))} · t ${c<0?'−':'+'} ${fmt(Math.abs(c))}`;
+    if(currentType==='exponential') eq=`s(t) = ${fmt(a)} · e^(${fmt(b)} · t) ${c<0?'−':'+'} ${fmt(Math.abs(c))}`;
+    $('equation').textContent=eq;
+    $('modelName').textContent={constant:'Konstant',linear:'Linear',quadratic:'Quadratisch',exponential:'Exponentiell'}[currentType];
+    $('valueA').textContent=fmt(a); $('valueB').textContent=fmt(b); $('valueC').textContent=fmt(c);
+    $('valueB').closest('.metric').style.display=(currentType==='constant')?'none':'flex';
+    $('rowC').style.display=(currentType==='linear'||currentType==='constant')?'none':'flex';
+  }
+  function makeSlider(key,label,min,max,step) {
+    const val=params[key];
+    return `<div class="param"><div class="paramtop"><label for="slider-${key}">${label}</label><strong id="out-${key}">${fmt(val)}</strong></div><input id="slider-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${val}"><div class="rangeends"><span>${fmt(min,1)}</span><span>${fmt(max,1)}</span></div></div>`;
+  }
+  function setupSliders() {
+    const xs=data.map(r=>r[0]), ys=data.map(r=>r[1]);
+    const xmin=Math.min(...xs), xmax=Math.max(...xs), ymin=Math.min(...ys), ymax=Math.max(...ys);
+    const xspan=Math.max(xmax-xmin,1), yspan=Math.max(ymax-ymin,1);
+    const aRange=(currentType==='linear'||currentType==='constant')?Math.max(1,Math.ceil(3*yspan/xspan)):Math.max(1,Math.ceil(2*yspan/(xspan*xspan)));
+    const bRange=Math.max(1,Math.ceil(2*yspan/xspan));
+    const cRange=Math.max(1,Math.ceil(2*Math.max(Math.abs(ymin),Math.abs(ymax))));
+    let html='';
+    html+=makeSlider('a','Parameter a',-aRange,aRange,0.01);
+    if(currentType!=='constant') html+=makeSlider('b','Parameter b',-bRange,bRange,0.01);
+    if(currentType!=='linear'&&currentType!=='constant') html+=makeSlider('c','Parameter c',-cRange,cRange,0.01);
+    $('sliders').innerHTML=html;
+    ['a','b','c'].forEach(k=>{ const el=$(`slider-${k}`); if(el) el.addEventListener('input',()=>{params[k]=Number(el.value);$(`out-${k}`).textContent=fmt(params[k]);updateEquation();draw();}); });
+  }
+  function draw() {
+    const svg=$('chart'), W=900,H=510, L=78,R=28,T=28,B=62, pw=W-L-R,ph=H-T-B;
+    const xs=data.map(r=>r[0]),ys=data.map(r=>r[1]);
+    let xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);
+    const xpad=(xmax-xmin||1)*.08, ypad=(ymax-ymin||1)*.16;
+    xmin-=xpad;xmax+=xpad;ymin-=ypad;ymax+=ypad;
+    const samples=100; // Achsen bleiben ausschließlich an den Messdaten orientiert.
+    if(ymax-ymin<1e-8){ymin-=1;ymax+=1;}
+    const sx=x=>L+(x-xmin)/(xmax-xmin)*pw, sy=y=>T+ph-(y-ymin)/(ymax-ymin)*ph;
+    const xt=nice(xmax-xmin), yt=nice(ymax-ymin);
+    let out='';
+    for(let x=Math.ceil(xmin/xt)*xt;x<=xmax+xt*.001;x+=xt){const px=sx(x);out+=`<line class="gridline" x1="${px}" y1="${T}" x2="${px}" y2="${T+ph}"/><text class="tick" x="${px}" y="${T+ph+20}" text-anchor="middle">${fmt(x,xt<1?2:1)}</text>`;}
+    for(let y=Math.ceil(ymin/yt)*yt;y<=ymax+yt*.001;y+=yt){const py=sy(y);out+=`<line class="gridline" x1="${L}" y1="${py}" x2="${L+pw}" y2="${py}"/><text class="tick" x="${L-12}" y="${py+4}" text-anchor="end">${fmt(y,yt<1?2:1)}</text>`;}
+    out+=`<line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${T+ph}"/><line class="axis" x1="${L}" y1="${T+ph}" x2="${L+pw}" y2="${T+ph}"/>`;
+    out+=`<text class="axislabel" x="${L+pw/2}" y="${H-12}" text-anchor="middle">Zeit t (s)</text><text class="axislabel" transform="translate(20 ${T+ph/2}) rotate(-90)" text-anchor="middle">Weg s (m)</text>`;
+    let d=''; for(let i=0;i<=samples;i++){const x=xmin+(xmax-xmin)*i/samples,y=fn(x);if(Number.isFinite(y)&&Math.abs(y)<1e8){d+=(d?' L':'M')+sx(x).toFixed(2)+' '+sy(y).toFixed(2);}}
+    savedCurves.forEach((saved,index)=>{const sf=x=>{const p=saved.params;if(saved.type==='constant')return p.a;if(saved.type==='linear')return p.a*x+p.b;if(saved.type==='quadratic')return p.a*x*x+p.b*x+p.c;return p.a*Math.exp(Math.max(-40,Math.min(40,p.b*x)))+p.c;};let sd='';for(let i=0;i<=samples;i++){const x=xmin+(xmax-xmin)*i/samples,y=sf(x);if(Number.isFinite(y)&&Math.abs(y)<1e8)sd+=(sd?' L':'M')+sx(x).toFixed(2)+' '+sy(y).toFixed(2);}if(sd)out+=`<path d="${sd}" fill="none" stroke="${saved.color}" stroke-width="2.5" stroke-dasharray="8 5" opacity=".9"><title>Übernommene Kurve ${index+1}</title></path>`;});
+    if(d) out+=`<path class="curve" d="${d}"/>`;
+    for(const [x,y] of data) out+=`<circle class="point" cx="${sx(x)}" cy="${sy(y)}" r="6"><title>t = ${fmt(x,3)} s; s = ${fmt(y,3)} m</title></circle>`;
+    svg.innerHTML=out;
+  }
+  function refresh() {setupSliders();updateEquation();updateTable();draw();}
+  function vFn(x){const {a,b,c}=vParams;if(vCurrentType==='constant')return a;if(vCurrentType==='linear')return a*x+b;if(vCurrentType==='quadratic')return a*x*x+b*x+c;return a*Math.exp(Math.max(-40,Math.min(40,b*x)))+c;}
+  function vEquation(){const {a,b,c}=vParams;let eq='';if(vCurrentType==='constant')eq=`v(t) = ${fmt(a)}`;if(vCurrentType==='linear')eq=`v(t) = ${fmt(a)} · t ${b<0?'−':'+'} ${fmt(Math.abs(b))}`;if(vCurrentType==='quadratic')eq=`v(t) = ${fmt(a)} · t² ${b<0?'−':'+'} ${fmt(Math.abs(b))} · t ${c<0?'−':'+'} ${fmt(Math.abs(c))}`;if(vCurrentType==='exponential')eq=`v(t) = ${fmt(a)} · e^(${fmt(b)} · t) ${c<0?'−':'+'} ${fmt(Math.abs(c))}`;$('vEquation').textContent=eq;$('vModelName').textContent={constant:'Konstant',linear:'Linear',quadratic:'Quadratisch',exponential:'Exponentiell'}[vCurrentType];$('vValueA').textContent=fmt(a);$('vValueB').textContent=fmt(b);$('vValueC').textContent=fmt(c);$('vRowB').style.display=vCurrentType==='constant'?'none':'flex';$('vRowC').style.display=(vCurrentType==='constant'||vCurrentType==='linear')?'none':'flex';}
+  function vMakeSlider(key,label,min,max,step){const val=vParams[key];return `<div class="param"><div class="paramtop"><label for="v-slider-${key}">${label}</label><strong id="v-out-${key}">${fmt(val)}</strong></div><input id="v-slider-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${val}"><div class="rangeends"><span>${fmt(min,1)}</span><span>${fmt(max,1)}</span></div></div>`;}
+  function vSetupSliders(){const valid=data.filter(r=>Number.isFinite(r[2]));const xs=valid.map(r=>r[0]),ys=valid.map(r=>r[2]);if(!valid.length){$('vSliders').innerHTML='';return;}const xspan=Math.max(Math.max(...xs)-Math.min(...xs),1),yspan=Math.max(Math.max(...ys)-Math.min(...ys),.2),level=Math.max(1,Math.ceil(2*Math.max(...ys.map(Math.abs))));let html=vMakeSlider('a','Parameter a',-level,level,0.01);if(vCurrentType!=='constant')html+=vMakeSlider('b','Parameter b',-Math.max(1,Math.ceil(2*yspan/xspan)),Math.max(1,Math.ceil(2*yspan/xspan)),0.01);if(vCurrentType==='quadratic'||vCurrentType==='exponential')html+=vMakeSlider('c','Parameter c',-level,level,0.01);$('vSliders').innerHTML=html;['a','b','c'].forEach(k=>{const el=$(`v-slider-${k}`);if(el)el.addEventListener('input',()=>{vParams[k]=Number(el.value);$(`v-out-${k}`).textContent=fmt(vParams[k]);vEquation();vDraw();});});}
+  function vDraw(){const svg=$('vChart'),W=900,H=510,L=78,R=28,T=28,B=62,pw=W-L-R,ph=H-T-B,valid=data.filter(r=>Number.isFinite(r[2]));if(valid.length<1){svg.innerHTML='<text x="450" y="245" text-anchor="middle" fill="currentColor" font-size="18">Im gewählten Bereich sind keine Geschwindigkeitswerte vorhanden.</text>';return;}const xs=data.map(r=>r[0]),ys=valid.map(r=>r[2]);let xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=-1,ymax=1;const xp=(xmax-xmin||1)*.08;xmin-=xp;xmax+=xp;const sx=x=>L+(x-xmin)/(xmax-xmin)*pw,sy=y=>T+ph-(y-ymin)/(ymax-ymin)*ph;let out='';for(let i=0;i<=5;i++){const x=xmin+(xmax-xmin)*i/5,y=ymin+(ymax-ymin)*i/5;out+=`<line class="gridline" x1="${sx(x)}" y1="${T}" x2="${sx(x)}" y2="${T+ph}"/><text class="tick" x="${sx(x)}" y="${T+ph+20}" text-anchor="middle">${fmt(x,2)}</text><line class="gridline" x1="${L}" y1="${sy(y)}" x2="${L+pw}" y2="${sy(y)}"/><text class="tick" x="${L-10}" y="${sy(y)+4}" text-anchor="end">${fmt(y,2)}</text>`;}out+=`<line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${T+ph}"/><line class="axis" x1="${L}" y1="${T+ph}" x2="${L+pw}" y2="${T+ph}"/><text class="axislabel" x="${L+pw/2}" y="${H-12}" text-anchor="middle">Zeit t (s)</text><text class="axislabel" transform="translate(20 ${T+ph/2}) rotate(-90)" text-anchor="middle">Geschwindigkeit v (m/s)</text>`;let d='';for(let i=0;i<=120;i++){const x=xmin+(xmax-xmin)*i/120,y=vFn(x);if(Number.isFinite(y)&&Math.abs(y)<1e8)d+=(d?' L':'M')+sx(x)+' '+sy(y);}if(d)out+=`<path class="curve" d="${d}"/>`;valid.forEach(([x,s0,v])=>out+=`<circle class="velocitypoint" cx="${sx(x)}" cy="${sy(v)}" r="6"><title>t = ${fmt(x,3)} s; v = ${fmt(v,3)} m/s</title></circle>`);svg.innerHTML=out;}
+  function vRefresh(){const valid=data.filter(r=>Number.isFinite(r[2]));$('vPointCount').textContent=valid.length;$('vTimeSpan').textContent=data.length?`${fmt(Math.min(...data.map(r=>r[0])),1)}–${fmt(Math.max(...data.map(r=>r[0])),1)} s`:'–';$('vDataRows').innerHTML=valid.map(r=>`<tr><td>${fmt(r[0],3)}</td><td>${fmt(r[2],3)}</td></tr>`).join('');vSetupSliders();vEquation();vDraw();}
+  function measuredVelocityPoints(){return data.filter(r=>Number.isFinite(r[2])).map(r=>({x:r[0],v:r[2]})).sort((a,b)=>a.x-b.x);}
+  function measuredVelocityAt(x){const pts=measuredVelocityPoints();if(!pts.length)return 0;if(x<=pts[0].x)return pts[0].v;if(x>=pts[pts.length-1].x)return pts[pts.length-1].v;for(let i=0;i<pts.length-1;i++){const p=pts[i],q=pts[i+1];if(x>=p.x&&x<=q.x){const u=(x-p.x)/(q.x-p.x||1);return p.v+u*(q.v-p.v);}}return pts[0].v;}
+  function measuredVelocitySlope(x){const pts=measuredVelocityPoints();if(pts.length<2)return 0;let best=0,dist=Infinity;for(let i=0;i<pts.length-1;i++){const mid=(pts[i].x+pts[i+1].x)/2,d=Math.abs(x-mid);if(d<dist){dist=d;best=(pts[i+1].v-pts[i].v)/(pts[i+1].x-pts[i].x||1);}}return best;}
+  function vDerivative(x){const {a,b}=vParams;if(vCurrentType==='constant')return 0;if(vCurrentType==='linear')return a;if(vCurrentType==='quadratic')return 2*a*x+b;return a*b*Math.exp(Math.max(-40,Math.min(40,b*x)));}
+  function drawAccelerationConstruction(){const svg=$('accTangentChart'),W=900,H=510,L=78,R=78,T=28,B=62,pw=W-L-R,ph=H-T-B;if(!data.length)return;let xmin=Math.min(...data.map(r=>r[0])),xmax=Math.max(...data.map(r=>r[0]));if(xmin===xmax)xmax=xmin+1;const xp=(xmax-xmin)*.06;xmin-=xp;xmax+=xp;accSelectedTime=Math.max(xmin,Math.min(xmax,accSelectedTime||data[Math.floor(data.length/2)][0]));const sy=v=>T+ph-(v+1)/2*ph,sx=x=>L+(x-xmin)/(xmax-xmin)*pw,amin=-2,amax=2,sa=a=>T+ph-(a-amin)/(amax-amin)*ph;let out=`<defs><clipPath id="accClip"><rect x="${L}" y="${T}" width="${pw}" height="${ph}"/></clipPath></defs>`;for(let i=0;i<=4;i++){const x=xmin+(xmax-xmin)*i/4,v=-1+2*i/4,a=amin+(amax-amin)*i/4;out+=`<line class="gridline" x1="${sx(x)}" y1="${T}" x2="${sx(x)}" y2="${T+ph}"/><text class="tick" x="${sx(x)}" y="${T+ph+20}" text-anchor="middle">${fmt(x,2)}</text><line class="gridline" x1="${L}" y1="${sy(v)}" x2="${L+pw}" y2="${sy(v)}"/><text class="tick" x="${L-10}" y="${sy(v)+4}" text-anchor="end">${fmt(v,1)}</text><text class="tick" x="${L+pw+10}" y="${sa(a)+4}">${fmt(a,1)}</text>`;}out+=`<line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${T+ph}"/><line class="axis" x1="${L+pw}" y1="${T}" x2="${L+pw}" y2="${T+ph}"/><line class="axis" x1="${L}" y1="${T+ph}" x2="${L+pw}" y2="${T+ph}"/><text class="axislabel" x="${L+pw/2}" y="${H-12}" text-anchor="middle">Zeit t (s)</text><text class="axislabel" transform="translate(20 ${T+ph/2}) rotate(-90)" text-anchor="middle">v (m/s)</text><text class="axislabel" transform="translate(${W-16} ${T+ph/2}) rotate(-90)" text-anchor="middle">a (m/s²)</text>`;let d='';const measured=measuredVelocityPoints();measured.forEach(p=>d+=(d?' L':'M')+sx(p.x)+' '+sy(p.v));const y0=measuredVelocityAt(accSelectedTime);out+=`<g clip-path="url(#accClip)"><path d="${d}" fill="none" stroke="var(--green)" stroke-width="3"/>${measured.map(p=>`<circle cx="${sx(p.x)}" cy="${sy(p.v)}" r="4" fill="var(--green)"/>`).join('')}`;const tx1=xmin,tx2=xmax;out+=`<line x1="${sx(tx1)}" y1="${sy(y0+accTangentSlope*(tx1-accSelectedTime))}" x2="${sx(tx2)}" y2="${sy(y0+accTangentSlope*(tx2-accSelectedTime))}" stroke="var(--orange)" stroke-width="3"/>`;accelerationPoints.forEach(p=>out+=`<circle cx="${sx(p.x)}" cy="${sa(p.a)}" r="6" fill="var(--green)" stroke="white" stroke-width="1.5"/>`);out+=`</g><circle cx="${sx(accSelectedTime)}" cy="${sy(y0)}" r="7" fill="var(--orange)"/>`;svg.innerHTML=out;svg.dataset.xmin=xmin;svg.dataset.xmax=xmax;$('accXLabel').textContent=fmt(accSelectedTime)+' s';$('accSlopeValue').textContent=fmt(accTangentSlope);$('accTangentEquation').textContent=`v(t) = ${fmt(accTangentSlope)} · (t − ${fmt(accSelectedTime)}) + ${fmt(y0)}`;}
+  function aFn(x){const {a,b,c}=aParams;if(aCurrentType==='constant')return a;if(aCurrentType==='linear')return a*x+b;return a*x*x+b*x+c;}
+  function setupASliders(){let html=makeSliderA('a','Parameter A',-2,2,.01);if(aCurrentType!=='constant')html+=makeSliderA('b','Parameter B',-2,2,.01);if(aCurrentType==='quadratic')html+=makeSliderA('c','Parameter C',-2,2,.01);$('aSliders').innerHTML=html;['a','b','c'].forEach(k=>{const el=$('a-slider-'+k);if(el)el.addEventListener('input',()=>{aParams[k]=Number(el.value);$('a-out-'+k).textContent=fmt(aParams[k]);updateAEquation();drawAccelerationFit();});});}
+  function makeSliderA(k,label,min,max,step){return `<div class="param"><div class="paramtop"><label for="a-slider-${k}">${label}</label><strong id="a-out-${k}">${fmt(aParams[k])}</strong></div><input id="a-slider-${k}" type="range" min="${min}" max="${max}" step="${step}" value="${aParams[k]}"><div class="rangeends"><span>${fmt(min,1)}</span><span>${fmt(max,1)}</span></div></div>`;}
+  function updateAEquation(){const {a,b,c}=aParams;$('aEquation').textContent=aCurrentType==='constant'?`a(t) = ${fmt(a)}`:aCurrentType==='linear'?`a(t) = ${fmt(a)} · t ${b<0?'−':'+'} ${fmt(Math.abs(b))}`:`a(t) = ${fmt(a)} · t² ${b<0?'−':'+'} ${fmt(Math.abs(b))} · t ${c<0?'−':'+'} ${fmt(Math.abs(c))}`;}
+  function refreshAccelerationFit(){setupASliders();updateAEquation();drawAccelerationFit();}
+  function drawAccelerationFit(){const svg=$('aChart'),W=900,H=510,L=78,R=28,T=28,B=62,pw=W-L-R,ph=H-T-B;if(!data.length)return;let xmin=Math.min(...data.map(r=>r[0])),xmax=Math.max(...data.map(r=>r[0]));if(xmin===xmax)xmax=xmin+1;const xp=(xmax-xmin)*.06;xmin-=xp;xmax+=xp;const ymin=-2,ymax=2,sx=x=>L+(x-xmin)/(xmax-xmin)*pw,sy=y=>T+ph-(y-ymin)/(ymax-ymin)*ph;let out=`<defs><clipPath id="aFitClip"><rect x="${L}" y="${T}" width="${pw}" height="${ph}"/></clipPath></defs>`;for(let i=0;i<=4;i++){const x=xmin+(xmax-xmin)*i/4,y=ymin+(ymax-ymin)*i/4;out+=`<line class="gridline" x1="${sx(x)}" y1="${T}" x2="${sx(x)}" y2="${T+ph}"/><text class="tick" x="${sx(x)}" y="${T+ph+20}" text-anchor="middle">${fmt(x,2)}</text><line class="gridline" x1="${L}" y1="${sy(y)}" x2="${L+pw}" y2="${sy(y)}"/><text class="tick" x="${L-10}" y="${sy(y)+4}" text-anchor="end">${fmt(y,1)}</text>`;}out+=`<line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${T+ph}"/><line class="axis" x1="${L}" y1="${T+ph}" x2="${L+pw}" y2="${T+ph}"/><text class="axislabel" x="${L+pw/2}" y="${H-12}" text-anchor="middle">Zeit t (s)</text><text class="axislabel" transform="translate(20 ${T+ph/2}) rotate(-90)" text-anchor="middle">Beschleunigung a (m/s²)</text><g clip-path="url(#aFitClip)">`;let d='';for(let i=0;i<=150;i++){const x=xmin+(xmax-xmin)*i/150;d+=(d?' L':'M')+sx(x)+' '+sy(aFn(x));}out+=`<path class="curve" d="${d}"/>`;accelerationPoints.forEach(p=>out+=`<circle cx="${sx(p.x)}" cy="${sy(p.a)}" r="6" fill="var(--orange)" stroke="white" stroke-width="1.5"/>`);out+='</g>';svg.innerHTML=out;}
+  function miniPlot(id,fn,points,ymin,ymax,label,color='var(--blue)'){const svg=$(id),W=900,H=360,L=70,R=25,T=20,B=55,pw=W-L-R,ph=H-T-B;let xmin=Math.min(...data.map(r=>r[0])),xmax=Math.max(...data.map(r=>r[0]));if(xmin===xmax)xmax=xmin+1;const sx=x=>L+(x-xmin)/(xmax-xmin)*pw,sy=y=>T+ph-(y-ymin)/(ymax-ymin)*ph;let out=`<defs><clipPath id="clip-${id}"><rect x="${L}" y="${T}" width="${pw}" height="${ph}"/></clipPath></defs><line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${T+ph}"/><line class="axis" x1="${L}" y1="${T+ph}" x2="${L+pw}" y2="${T+ph}"/><text class="axislabel" x="${L+pw/2}" y="${H-12}" text-anchor="middle">Zeit t (s)</text><text class="axislabel" transform="translate(18 ${T+ph/2}) rotate(-90)" text-anchor="middle">${label}</text><g clip-path="url(#clip-${id})">`;let d='';for(let i=0;i<=160;i++){const x=xmin+(xmax-xmin)*i/160;d+=(d?' L':'M')+sx(x)+' '+sy(fn(x));}out+=`<path d="${d}" fill="none" stroke="${color}" stroke-width="3"/>`;points.forEach(p=>out+=`<circle cx="${sx(p[0])}" cy="${sy(p[1])}" r="4" fill="var(--orange)"/>`);out+='</g>';svg.innerHTML=out;}
+  function summarySEq(){const {a,b,c}=params;if(currentType==='constant')return `s(t) = ${fmt(a)}`;if(currentType==='linear')return `s(t) = ${fmt(a)} · t ${b<0?'−':'+'} ${fmt(Math.abs(b))}`;if(currentType==='quadratic')return `s(t) = ${fmt(a)} · t² ${b<0?'−':'+'} ${fmt(Math.abs(b))} · t ${c<0?'−':'+'} ${fmt(Math.abs(c))}`;return `s(t) = ${fmt(a)} · e^(${fmt(b)} · t) ${c<0?'−':'+'} ${fmt(Math.abs(c))}`;}
+  function summaryVEq(){const {a,b,c}=vParams;if(vCurrentType==='constant')return `v(t) = ${fmt(a)}`;if(vCurrentType==='linear')return `v(t) = ${fmt(a)} · t ${b<0?'−':'+'} ${fmt(Math.abs(b))}`;if(vCurrentType==='quadratic')return `v(t) = ${fmt(a)} · t² ${b<0?'−':'+'} ${fmt(Math.abs(b))} · t ${c<0?'−':'+'} ${fmt(Math.abs(c))}`;return `v(t) = ${fmt(a)} · e^(${fmt(b)} · t) ${c<0?'−':'+'} ${fmt(Math.abs(c))}`;}
+  function summaryAEq(){const {a,b,c}=aParams;if(aCurrentType==='constant')return `a(t) = ${fmt(a)}`;if(aCurrentType==='linear')return `a(t) = ${fmt(a)} · t ${b<0?'−':'+'} ${fmt(Math.abs(b))}`;return `a(t) = ${fmt(a)} · t² ${b<0?'−':'+'} ${fmt(Math.abs(b))} · t ${c<0?'−':'+'} ${fmt(Math.abs(c))}`;}
+  function syncReportTexts(){const fields=[...document.querySelectorAll('.secure-input')];$('reportAnswers').innerHTML=fields.map(f=>`<div class="report-answer"><strong>${f.dataset.reportTitle}</strong><div>${escapeHtml(f.value.trim()||'Noch nicht formuliert.')}</div></div>`).join('');const name=$('reportName').value.trim(),date=$('reportDate').value;$('reportIdentity').textContent=[name,date?new Date(date+'T12:00:00').toLocaleDateString('de-DE'):null].filter(Boolean).join(' · ');$('reportSEquation').textContent=summarySEq();$('reportVEquation').textContent=summaryVEq();$('reportAEquation').textContent=summaryAEq();}
+  function escapeHtml(text){return text.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+  async function downloadPdfReport() {
+
+    syncReportTexts();
+    drawSummary();
+
+    setTimeout(() => {
+
+        html2pdf()
+            .set(options)
+            .from(report)
+            .save();
+
+    }, 500);
+
+    const report = document.getElementById('page8');
+
+    const options = {
+        margin: 8,
+        filename: 'Bewegungsanalyse_Bericht.pdf',
+
+        image: {
+            type: 'jpeg',
+            quality: 1
+        },
+
+        html2canvas: {
+          scale: 3,
+          foreignObjectRendering: true
+        },
+
+        jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait'
+        },
+
+        pagebreak: {
+            mode: ['css', 'legacy']
+        }
+    };
+    console.log(report.hidden);
+    await html2pdf()
+        .set(options)
+        .from(report)
+        .save();
+}
+  function drawSummary(){syncReportTexts();const svals=data.map(r=>r[1]),sp=(Math.max(...svals)-Math.min(...svals)||1)*.15;$('summarySEquation').textContent=summarySEq();$('summaryVEquation').textContent=summaryVEq();$('summaryAEquation').textContent=summaryAEq();miniPlot('summaryS',fn,data.map(r=>[r[0],r[1]]),Math.min(...svals)-sp,Math.max(...svals)+sp,'s (m)');miniPlot('summaryV',vFn,data.filter(r=>Number.isFinite(r[2])).map(r=>[r[0],r[2]]),-1,1,'v (m/s)','var(--green)');miniPlot('summaryA',aFn,accelerationPoints.map(p=>[p.x,p.a]),-2,2,'a (m/s²)','var(--blue)');}
+  function derivative(x){if(currentType==='constant')return 0;if(currentType==='linear')return params.a;if(currentType==='quadratic')return 2*params.a*x+params.b;return params.a*params.b*Math.exp(Math.max(-40,Math.min(40,params.b*x)));}
+  function drawTangent(){const svg=$('tangentChart'),W=900,H=510,L=78,R=58,T=28,B=62,pw=W-L-R,ph=H-T-B;if(!data.length){svg.innerHTML='<text x="450" y="245" text-anchor="middle" fill="currentColor" font-size="18">Lade Messdaten und wähle einen Bereich.</text>';return;}const xs=data.map(r=>r[0]);let xmin=Math.min(...xs),xmax=Math.max(...xs);const padX=(xmax-xmin||1)*.08;xmin-=padX;xmax+=padX;const x0=Math.max(Math.min(...xs),Math.min(Math.max(...xs),selectedTime)),y0=fn(x0);const modelValues=[];for(let i=0;i<=100;i++)modelValues.push(fn(xmin+(xmax-xmin)*i/100));let ymin=Math.min(...modelValues),ymax=Math.max(...modelValues);if(!Number.isFinite(ymin)||!Number.isFinite(ymax)){ymin=0;ymax=1;}if(ymax-ymin<1e-8){ymin-=1;ymax+=1;}const ypad=(ymax-ymin)*.15;ymin-=ypad;ymax+=ypad;const slopeMin=-10,slopeMax=10;const sx=x=>L+(x-xmin)/(xmax-xmin)*pw,sy=y=>T+ph-(y-ymin)/(ymax-ymin)*ph,sm=m=>T+ph-(m-slopeMin)/(slopeMax-slopeMin)*ph;const tangent=x=>y0+tangentSlope*(x-x0);let out='';for(let i=0;i<=5;i++){const x=xmin+(xmax-xmin)*i/5,y=ymin+(ymax-ymin)*i/5,m=slopeMin+(slopeMax-slopeMin)*i/5;out+=`<line class="gridline" x1="${sx(x)}" y1="${T}" x2="${sx(x)}" y2="${T+ph}"/><text class="tick" x="${sx(x)}" y="${T+ph+20}" text-anchor="middle">${fmt(x,2)}</text><line class="gridline" x1="${L}" y1="${sy(y)}" x2="${L+pw}" y2="${sy(y)}"/><text class="tick" x="${L-10}" y="${sy(y)+4}" text-anchor="end">${fmt(y,2)}</text><text class="tick" x="${L+pw+10}" y="${sm(m)+4}" text-anchor="start">${fmt(m,1)}</text>`;}out+=`<line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${T+ph}"/><line class="axis" x1="${L+pw}" y1="${T}" x2="${L+pw}" y2="${T+ph}"/><line class="axis" x1="${L}" y1="${T+ph}" x2="${L+pw}" y2="${T+ph}"/><text class="axislabel" x="${L+pw/2}" y="${H-12}" text-anchor="middle">Zeit t (s)</text><text class="axislabel" transform="translate(20 ${T+ph/2}) rotate(-90)" text-anchor="middle">Weg s (m)</text><text class="axislabel" transform="translate(${W-12} ${T+ph/2}) rotate(-90)" text-anchor="middle">Geschwindigkeit v / Steigung m (m/s)</text>`;let d='';for(let i=0;i<=100;i++){const x=xmin+(xmax-xmin)*i/100,y=fn(x);if(Number.isFinite(y)&&Math.abs(y)<1e8)d+=(d?' L':'M')+sx(x)+' '+sy(y);}out+=`<path class="curve" d="${d}"/>`;out+=`<path d="M ${sx(xmin)} ${sy(tangent(xmin))} L ${sx(xmax)} ${sy(tangent(xmax))}" fill="none" stroke="#d45b52" stroke-width="3" stroke-dasharray="8 5"/><circle cx="${sx(x0)}" cy="${sy(y0)}" r="7" fill="#e58a35" stroke="white" stroke-width="2"/><text x="${sx(x0)+10}" y="${sy(y0)-12}" fill="currentColor" font-size="13">(${fmt(x0,2)}; ${fmt(y0,2)})</text>`;let measuredV='';data.forEach(r=>{if(Number.isFinite(r[2]))measuredV+=(measuredV?' L':'M')+sx(r[0])+' '+sm(Math.max(slopeMin,Math.min(slopeMax,r[2])));});if(measuredV)out+=`<path d="${measuredV}" fill="none" stroke="var(--green)" stroke-width="3"/>`;data.forEach(r=>{if(Number.isFinite(r[2]))out+=`<circle cx="${sx(r[0])}" cy="${sm(Math.max(slopeMin,Math.min(slopeMax,r[2])))}" r="3.5" fill="var(--green)"/>`;});const sorted=[...slopePoints].sort((a,b)=>a.x-b.x);if(sorted.length>1)out+=`<polyline points="${sorted.map(p=>`${sx(p.x)},${sm(Math.max(slopeMin,Math.min(slopeMax,p.m)))}`).join(' ')}" fill="none" stroke="var(--green)" stroke-width="2.5"/>`;sorted.forEach(p=>out+=`<circle cx="${sx(p.x)}" cy="${sm(Math.max(slopeMin,Math.min(slopeMax,p.m)))}" r="6" fill="var(--green)" stroke="white" stroke-width="1.5"><title>t = ${fmt(p.x)} s; Steigung = ${fmt(p.m)} m/s</title></circle>`);svg.innerHTML=out;svg.dataset.xmin=xmin;svg.dataset.xmax=xmax;$('slopeXLabel').textContent=fmt(x0)+' s';$('tangentEquation').textContent=`s(t) = ${fmt(tangentSlope)} · (t − ${fmt(x0)}) + ${fmt(y0)}`;$('slopeValue').textContent=fmt(tangentSlope);}
+  $('tangentChart').addEventListener('click',e=>{if(!data.length)return;const rect=$('tangentChart').getBoundingClientRect(),px=(e.clientX-rect.left)/rect.width*900,xmin=Number($('tangentChart').dataset.xmin),xmax=Number($('tangentChart').dataset.xmax);if(!Number.isFinite(xmin)||!Number.isFinite(xmax))return;selectedTime=Math.max(Math.min(...data.map(r=>r[0])),Math.min(Math.max(...data.map(r=>r[0])),xmin+(px-78)/(900-78-58)*(xmax-xmin)));drawTangent();});
+  $('slopeSlider').addEventListener('input',e=>{tangentSlope=Number(e.target.value);drawTangent();});
+  $('addSlopePoint').addEventListener('click',()=>{slopePoints.push({x:selectedTime,m:tangentSlope});drawTangent();$('slopeStatus').textContent=`Punkt (${fmt(selectedTime)} s; ${fmt(tangentSlope)} m/s) übernommen.`;});
+  $('clearSlopePoints').addEventListener('click',()=>{slopePoints=[];drawTangent();$('slopeStatus').textContent='Alle Steigungspunkte wurden gelöscht.';});
+  $('saveCurve').addEventListener('click',()=>{const colors=['#26966c','#a855c7','#d45b52','#d49a20','#168c91'];savedCurves.push({type:currentType,params:{...params},color:colors[savedCurves.length%colors.length]});draw();$('saveCurve').textContent=`Kurve übernommen (${savedCurves.length})`;});
+  $('toVelocityPage').addEventListener('click',()=>showPage(4));
+  $('page4Back').addEventListener('click',()=>showPage(3));
+  $('vFunctionType').addEventListener('change',e=>{vCurrentType=e.target.value;vParams={...defaults[vCurrentType]};vRefresh();});
+  $('vResetParams').addEventListener('click',()=>{vParams={...defaults[vCurrentType]};vRefresh();});
+  $('toSlopePage').addEventListener('click',()=>{selectedTime=data[Math.floor(data.length/2)]?.[0]??2;tangentSlope=derivative(selectedTime);$('slopeSlider').value=Math.max(-10,Math.min(10,tangentSlope));tangentSlope=Number($('slopeSlider').value);showPage(5);});
+  $('page5Back').addEventListener('click',()=>showPage(4));
+  function changeType(type) {currentType=type;params={...defaults[type]};refresh();}
+  $('functionType').addEventListener('change',e=>changeType(e.target.value));
+  $('resetParams').addEventListener('click',()=>{params={...defaults[currentType]};refresh();});
+  $('sampleBtn').addEventListener('click',()=>{allData=[[0,0.1,0.9],[1,1.1,1.0],[2,2.2,1.1],[3,3.0,1.0],[4,4.2,1.2],[5,5.1,0.9]];data=allData.slice();resetRegion();setStatus('Beispieldaten geladen.');refresh();drawRegion();});
+  $('resetDataBtn').addEventListener('click',()=>{$('csvFile').value='';allData=[];data=[];resetRegion();setStatus('Bitte lade eine CSV-Datei oder die Beispieldaten.',true);updateTable();drawEmpty();drawRegion();});
+  function drawEmpty(){ $('chart').innerHTML='<text x="450" y="245" text-anchor="middle" fill="currentColor" font-size="18">Lade Messdaten, um das Diagramm zu erstellen.</text>'; $('pointCount').textContent='0'; $('timeSpan').textContent='–'; }
+  $('toAccelerationPage').addEventListener('click',()=>{accSelectedTime=data[Math.floor(data.length/2)]?.[0]??0;accTangentSlope=Math.max(-2,Math.min(2,measuredVelocitySlope(accSelectedTime)));$('accSlopeSlider').value=accTangentSlope;showPage(6);});
+  $('page6Back').addEventListener('click',()=>showPage(5));
+  $('accSlopeSlider').addEventListener('input',e=>{accTangentSlope=Number(e.target.value);drawAccelerationConstruction();});
+  $('accTangentChart').addEventListener('click',e=>{const r=e.currentTarget.getBoundingClientRect(),xmin=Number(e.currentTarget.dataset.xmin),xmax=Number(e.currentTarget.dataset.xmax);accSelectedTime=xmin+Math.max(0,Math.min(1,(e.clientX-r.left)/(r.width)))*(xmax-xmin);accTangentSlope=Math.max(-2,Math.min(2,measuredVelocitySlope(accSelectedTime)));$('accSlopeSlider').value=accTangentSlope;drawAccelerationConstruction();});
+  $('addAccelerationPoint').addEventListener('click',()=>{const i=accelerationPoints.findIndex(p=>Math.abs(p.x-accSelectedTime)<1e-6),p={x:accSelectedTime,a:accTangentSlope};if(i>=0)accelerationPoints[i]=p;else accelerationPoints.push(p);$('accStatus').textContent=`Punkt (${fmt(p.x)}, ${fmt(p.a)}) übernommen.`;drawAccelerationConstruction();});
+  $('clearAccelerationPoints').addEventListener('click',()=>{accelerationPoints=[];$('accStatus').textContent='Beschleunigungspunkte gelöscht.';drawAccelerationConstruction();});
+  $('toAccelerationFit').addEventListener('click',()=>showPage(7));$('page7Back').addEventListener('click',()=>showPage(6));
+  $('aFunctionType').addEventListener('change',e=>{aCurrentType=e.target.value;aParams={a:0,b:0,c:0};refreshAccelerationFit();});$('aResetParams').addEventListener('click',()=>{aParams={a:0,b:0,c:0};refreshAccelerationFit();});
+  $('toSummary').addEventListener('click',()=>showPage(8));$('page8Back').addEventListener('click',()=>showPage(7));$('restartAnalysis').addEventListener('click',()=>showPage(1));
+  $('csvFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{const parsed=parseCSV(await file.text());allData=parsed;data=allData.slice();resetRegion();setStatus(`${file.name}: ${allData.length} gültige Messwertpaare eingelesen.`);refresh();drawRegion();}catch(err){setStatus(err.message,true);}});
+  $('goPage0').addEventListener('click',()=>showPage(0));
+  $('goPage1').addEventListener('click',()=>showPage(1));
+  $('goPage2').addEventListener('click',()=>{data=allData.slice();showPage(2);});
+  $('goPage3').addEventListener('click',()=>{$('applyRegion').click();});
+  $('goPage4').addEventListener('click',()=>showPage(4));
+  $('goPage5').addEventListener('click',()=>showPage(5));
+  $('goPage6').addEventListener('click',()=>showPage(6));
+  $('goPage7').addEventListener('click',()=>showPage(7));
+  $('goPage8').addEventListener('click',()=>showPage(8));
+  $('page0Next').addEventListener('click',()=>showPage(1));
+  $('page1Next').addEventListener('click',()=>{if(allData.length<2){setStatus('Bitte lade zuerst mindestens zwei Messwertpaare.',true);return;}data=allData.slice();showPage(2);});
+  $('page2Back').addEventListener('click',()=>showPage(1));$('applyRegion').addEventListener('click',()=>{const lo=Math.min(regionMin,regionMax),hi=Math.max(regionMin,regionMax);data=allData.filter(r=>r[0]>=lo&&r[0]<=hi);if(data.length<2){$('regionSummary').textContent='Bitte wähle einen Bereich mit mindestens zwei Messpunkten.';return;}showPage(3);});
+  document.querySelectorAll('.secure-input').forEach(el=>el.addEventListener('input',syncReportTexts));$('reportName').addEventListener('input',syncReportTexts);$('reportDate').addEventListener('change',syncReportTexts);$('downloadPdf').addEventListener('click',downloadPdfReport);
+  refresh();drawRegion();showPage(1);
+})();
+</script>
+</body>
+</html>
