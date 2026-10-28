@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="de">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <title>Messdatenanalyse – Bewegungen</title>
+  </head>
+  <body>
+    <div id="app">
+        <header>
+            <div class="eyebrow">Physik · Datenanalyse</div>
+            <!--<p class="subtitle">Finde durch eigenes Experimentieren ein mathematisches Modell für deine Messwerte.</p>-->
+        </header>
+        <nav class="booknav" aria-label="Seiten der Messdatenanalyse">
+            <div class="booksteps">
+                <div class="bookstep"><button id="goPage0" aria-current="step">0 · Start</button></div>
+                <div class="bookstep"><button id="goPage1">1 · Daten</button></div>
+                <div class="bookstep"><button id="goPage2">2 · Bereich</button></div>
+                <div class="bookstep"><button id="goPage3">3 · Wegmodell</button></div>
+                <div class="bookstep"><button id="goPage4">4 · Geschwindigkeitsmodell</button></div>
+                <div class="bookstep"><button id="goPage5">5 · Geschwindigkeit konstruieren</button></div>
+                <div class="bookstep"><button id="goPage6">6 · Beschleunigung konstruieren</button></div>
+                <div class="bookstep"><button id="goPage7">7 · Beschleunigung modellieren</button></div>
+                <div class="bookstep"><button id="goPage8">8 · Abschluss</button></div>
+            </div>
+            <div class="pill" id="pageIndicator">Seite 1 von 8</div>
+        </nav>
+        <section include-html="page0.html" class="bookpage" id="page0"></section>
+        <section include-html="page1.html" class="bookpage" id="page1" hidden></section>
+        <section include-html="page2.html" class="bookpage" id="page2" hidden></section>
+        <section include-html="page3.html" class="bookpage" id="page3" hidden></section>
+        <section include-html="page4.html" class="bookpage" id="page4" hidden></section>
+        <section include-html="page5.html" class="bookpage" id="page5" hidden></section>
+        <section include-html="page6.html" class="bookpage" id="page6" hidden></section>
+        <section include-html="page7.html" class="bookpage" id="page7" hidden></section>
+        <section include-html="page8.html" class="bookpage" id="page8" hidden></section>
+    </div>
+  
+    <script>
+        function includeHTML() {
+            var z, i, elmnt, file, xhttp;
+            /* Loop through a collection of all HTML elements: */
+            z = document.getElementsByTagName("*");
+            for (i = 0; i < z.length; i++) {
+            elmnt = z[i];
+            /*search for elements with a certain atrribute:*/
+            file = elmnt.getAttribute("include-html");
+            if (file) {
+                /* Make an HTTP request using the attribute value as the file name: */
+                xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                if (this.readyState == 4) {
+                    if (this.status == 200) {elmnt.innerHTML = this.responseText;}
+                    if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
+                    /* Remove the attribute, and call this function once more: */
+                    elmnt.removeAttribute("w3-include-html");
+                    includeHTML();
+                }
+                }
+                xhttp.open("GET", file, true);
+                xhttp.send();
+                /* Exit the function: */
+                return;
+            }
+            }
+        }
+
+        
+        (() => {
+            const $ = id => document.getElementById(id);
+
+            function showPage(n){
+                /* Seite bei Klick auf Navbar anzeigen */
+                activePage=n;
+                [0,1,2,3,4,5,6,7,8].forEach(i=>{
+                $('page'+i).hidden=i!==n;
+                if($('goPage'+i))$('goPage'+i).setAttribute('aria-current',i===n?'step':'false');
+                });
+                $('pageIndicator').textContent=`Seite ${n} von 8`;
+                /* Action bei Öffnen einer Seite*/
+                //if(n===2)drawRegion();
+                //if(n===3)refresh();
+                //if(n===4)vRefresh();
+                //if(n===5)drawTangent();
+                //if(n===6)drawAccelerationConstruction();
+                //if(n===7)refreshAccelerationFit();
+                //if(n===8)drawSummary();
+                window.scrollTo({top:0,behavior:'smooth'});
+            }
+
+            // EventListeners - Navbar
+            $('goPage0').addEventListener('click',()=>showPage(0));
+            $('goPage1').addEventListener('click',()=>showPage(1));
+            //$('goPage2').addEventListener('click',()=>{data=allData.slice();showPage(2);});
+            $('goPage2').addEventListener('click',()=>showPage(2));
+            //$('goPage3').addEventListener('click',()=>{$('applyRegion').click();});
+            $('goPage3').addEventListener('click',()=>showPage(3));
+            $('goPage4').addEventListener('click',()=>showPage(4));
+            $('goPage5').addEventListener('click',()=>showPage(5));
+            $('goPage6').addEventListener('click',()=>showPage(6));
+            $('goPage7').addEventListener('click',()=>showPage(7));
+            $('goPage8').addEventListener('click',()=>showPage(8));
+
+        })();
+    </script>
+</body>
+
+<script>
+  includeHTML();
+</script>
+</html>
