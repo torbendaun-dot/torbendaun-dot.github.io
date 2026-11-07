@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mein Versuchsbuch – Naturwissenschaften</title>
+<title>Prüfauftrag – Naturwissenschaften</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -94,7 +94,7 @@ h1{font-size:2.5rem} h2{font-size:1.9rem}
 </head>
 <body>
 
-<nav id="nav" aria-label="Seitennavigation"><span class="title">🔬 Mein Versuchsbuch</span></nav>
+<nav id="nav" aria-label="Seitennavigation"><span class="title">🔬 Prüfauftrag</span></nav>
 
 <main>
   <button class="arrow prev" id="prev" aria-label="Vorherige Seite"><svg viewBox="0 0 60 100"><polygon points="52,6 52,94 8,50"/></svg></button>
@@ -103,8 +103,8 @@ h1{font-size:2.5rem} h2{font-size:1.9rem}
 
     <!-- ===== SEITE 0: START ===== -->
     <section class="page" data-title="Start">
-      <h1>Willkommen im Versuchsbuch!</h1>
-      <p>Hier führst du einen Versuch Schritt für Schritt durch. In diesem Buch hilft dir ein Video, und du kannst alles noch einmal nachlesen.</p>
+      <h1>Euer Prüfauftrag!</h1>
+      <p>Das da-Vinci-Forschungsinstitut hat Dir einen Auftrag erteilt. Du sollst einen Eisendraht untersuchen, damit er später weiterverarbeitet werden kann. Dieses Versuchsbuch hilft Dir dabei, den Versuch durchzuführen.</p>
       <div class="intro">
         <div class="card mint">
           <h3>So benutzt du das Buch</h3>
@@ -118,16 +118,19 @@ h1{font-size:2.5rem} h2{font-size:1.9rem}
         <div class="card sun">
           <h3>Worum geht es im Versuch?</h3>
           <!-- HIER: Beschreibung des Versuchs und der Fragestellung eintragen -->
-          <p>Hier steht, welche Frage du mit dem Versuch beantworten möchtest.</p>
+          <p>Du magnetisierst einen Eisendraht und teilst ihn dann in kleinere Stücke. <b>Was passiert mit dem Magneten, wenn man ihn in der Mitte durchbricht?</b></p>
+          
           <h3>Das brauchst du</h3>
           <!-- HIER: Materialliste anpassen -->
-          <ul><li>Material 1</li><li>Material 2</li><li>Material 3</li></ul>
+          <ul><li>ein Stück Eisendraht</li>
+            <li>einen Stabmagneten</li>
+            <li>einige Büroklammern</li></ul>
+          <h3>Sicherheit</h3>
+          <ul>
+            <li>Der Draht ist spitz. Mache keine schnellen Bewegungen mit ihm. </li>
+            <li>Halte ihn vom Gesicht fern.</li>
+          </ul>
         </div>
-      </div>
-      <div class="card" style="margin-top:20px;background:#ffe3df;border-color:var(--coral)">
-        <h3>⚠️ Sicherheit zuerst</h3>
-        <!-- HIER: Sicherheitshinweise anpassen -->
-        <p style="margin:0">Arbeite sorgfältig, trage wenn nötig eine Schutzbrille und frage bei Unsicherheiten deine Lehrkraft.</p>
       </div>
       <button class="start-btn" data-go="1">Los geht's!</button>
     </section>
@@ -150,13 +153,47 @@ h1{font-size:2.5rem} h2{font-size:1.9rem}
    - sicherheit: Liste der Sicherheitsanweisungen (leer lassen = kein Kasten)
    ===================================================================== */
 const SCHRITTE = [
-  { title: "Schritt 1", mitVideo: true, video: "", steps: [], sicherheit: [] },
-  { title: "Schritt 2", mitVideo: true, video: "", steps: [], sicherheit: [] },
-  { title: "Schritt 3", mitVideo: true, video: "", steps: [], sicherheit: [] },
-  { title: "Schritt 4", mitVideo: true, video: "", steps: [], sicherheit: [] },
-  { title: "Schritt 5", mitVideo: true, video: "video.mp4", steps: ["Hier sollen keine Sicherheitshinweise angezeigt werden."], sicherheit: [] },
-  { title: "Schritt 6", mitVideo: true, video: "NW-MagneteTeilen.mp4", steps: ["Dieser Schritt ist wichtig", "Dieser Schritt ist wichtiger"], sicherheit: ["Wir achten auf Sicherheit"] },
-  { title: "Schritt 7", mitVideo: false, video: "", steps: [], sicherheit: [] }
+  { title: "Ist der Draht noch unmagnetisch?", mitVideo: true, video: "schritt1Komp.mp4", steps: [
+    "Halte den Eisendraht mit der Spitze an die Büroklammern.",
+    "Beobachte: Bleibt eine Büroklammer hängen?",
+    "<b>Ja?</b> Dann ist der Draht schon magnetisch. Nimm einen anderen Draht.",
+    "<b>Nein?</b> Super, dann kannst du weitermachen."
+  ] },
+  { title: "Den Draht magnetisieren", mitVideo: true, video: "schritt2Komp.mp4", steps: [
+    "Lege den Draht auf den Tisch.",
+    "Streiche mit <b>immer derselben Seite</b> des Magneten in <b>eine Richtung</b> am Draht entlang.",
+    "Hebe den Magneten am Ende ab und setze ihn wieder am Anfang an. <b>Nicht hin- und herstreichen!</b>",
+    "Wiederhole das etwa 20-mal."
+  ] },
+  { title: "Hat es geklappt?", mitVideo: true, video: "schritt3Komp.mp4", steps: [
+    "Halte den Draht an die Büroklammern.",
+    "Bleiben nur wenige hängen? Streiche noch einige Male mit dem Magneten.",
+    "Bleiben mehrere Büroklammern hängen? Super!",
+    "Lege den Magneten jetzt weg. Du brauchst ihn nicht mehr.",
+    "Notiere Deine Beobachtung und mache mit dem nächsten Schritt weiter."
+  ] },
+  { title: "Den Draht halbieren", mitVideo: true, video: "schritt4Komp.mp4", steps: [
+    "Suche die Kerbe in der Mitte des Drahtes.",
+    "Biege den Draht an der Kerbe <b>langsam</b> mehrmals hin und her, bis er bricht."
+  ],
+    sicherheit: ["Biege den Draht langsam, nicht ruckartig.", "Halte die Knickstelle zum Tisch hin.", "Fasse die Bruchstellen nicht an."] },
+  { title: "Die Hälften testen", mitVideo: true, video: "schritt5Komp.mp4", steps: [
+    "Halte jede Hälfte einzeln an die Büroklammern.",
+    "Beobachte: Sind beide Stücke magnetisch?",
+    "Notiere Deine Beobachtung auf dem Arbeitsblatt."
+  ] },
+  { title: "Noch einmal teilen", mitVideo: true, video: "schritt6Komp.mp4", steps: [
+    "Nimm eine der Hälften und brich sie an der Kerbe durch.",
+    "Teste die beiden Viertel an den Büroklammern.",
+    "Notiere Deine Beobachtung auf dem Arbeitsblatt."
+  ],
+    sicherheit: ["Biege den Draht langsam, nicht ruckartig.", "Halte die Knickstelle zum Tisch hin.", "Fasse die Bruchstellen nicht an."] },
+  { title: "So geht es weiter.", mitVideo: false, video: "", steps: [
+    "Räume den Versuch auf.",
+    "Notiere Dein Ergebnis in <b>Aufgabe 3</b>.",
+    "Sprich dem da-Vinci-Forschungsinstitut in <b>Aufgabe 4</b> eine Empfehlung aus. Sind die Drahtstücke geeignet?",
+    "Unterschreibe deinen Prüfbericht."
+  ] }
 ];
 
 const book = document.getElementById('book');
