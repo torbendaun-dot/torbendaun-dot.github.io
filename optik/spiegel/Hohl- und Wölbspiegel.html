@@ -1,0 +1,783 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Hohl- und Wölbspiegel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Idee: ein aufgeschlagenes Lehrbuch. Links Text und Aufgaben, rechts die Zeichnung zum Anfassen.
+   Kühles Papier auf blauem Schreibtisch, Lot rot, Lichtstrahlen schwarz, Spiegel petrol. */
+:root{
+  --desk:#cfdbe3; --paper:#fcfdfe; --paper2:#f3f7fa; --ink:#15212b; --muted:#566774; --line:#c9d6de;
+  --accent:#0b7a75; --accent-ink:#ffffff; --tint:rgba(11,122,117,.10);
+  --ray:#12181e; --lot:#d11f2f; --mirror:#0b7a75; --axis:#7c8b97;
+  --gold:#b87900; --obj:#d9730d; --img:#6d3fd1; --ok:#16803c; --no:#b42318; --shadow:rgba(20,40,60,.22);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --desk:#0b1117; --paper:#17212b; --paper2:#131c25; --ink:#e8eff5; --muted:#9aa8b5; --line:#2f3d4a;
+  --accent:#3fc1b9; --accent-ink:#06211f; --tint:rgba(63,193,185,.14);
+  --ray:#f2f6fa; --lot:#ff6b78; --mirror:#3fc1b9; --axis:#7f8c99;
+  --gold:#f2c14e; --obj:#ff9a45; --img:#b79cff; --ok:#4ade80; --no:#fb7185; --shadow:rgba(0,0,0,.5);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --desk:#0b1117; --paper:#17212b; --paper2:#131c25; --ink:#e8eff5; --muted:#9aa8b5; --line:#2f3d4a;
+  --accent:#3fc1b9; --accent-ink:#06211f; --tint:rgba(63,193,185,.14);
+  --ray:#f2f6fa; --lot:#ff6b78; --mirror:#3fc1b9; --axis:#7f8c99;
+  --gold:#f2c14e; --obj:#ff9a45; --img:#b79cff; --ok:#4ade80; --no:#fb7185; --shadow:rgba(0,0,0,.5);
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--desk);color:var(--ink);font:16px/1.6 "Lexend",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+.app{max-width:1360px;margin:0 auto;padding-block:10px 14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:10px;min-height:100dvh}
+.top{display:flex;align-items:center;gap:12px}
+.run{flex:1;min-width:0;color:var(--muted);font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn{font:inherit;font-size:.95rem;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 14px;min-height:44px;cursor:pointer;touch-action:manipulation}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,.hnd:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn[disabled]{opacity:.4;cursor:default}
+.btn[aria-pressed="true"],.btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.chip{min-height:40px;padding:6px 12px;font-size:.9rem}
+
+/* ---- Buch ---- */
+.book{position:relative;flex:1;min-height:560px;display:grid;grid-template-columns:minmax(310px,5fr) minmax(0,7fr);background:var(--paper);border-radius:12px;box-shadow:0 1px 0 var(--line),0 14px 34px var(--shadow);perspective:2200px;overflow:clip}
+.page{position:relative;min-width:0;padding:24px 30px 52px}
+.page.right{background:var(--paper2);border-left:1px solid var(--line);box-shadow:inset 18px 0 22px -16px var(--shadow);transform-origin:left center}
+.page.left{transform-origin:right center}
+.flip-next .right{animation:flipNext .55s cubic-bezier(.3,.7,.3,1) both}
+.flip-next .left{animation:fadeIn .4s both}
+.flip-prev .left{animation:flipPrev .55s cubic-bezier(.3,.7,.3,1) both}
+.flip-prev .right{animation:fadeIn .4s both}
+@keyframes flipNext{from{transform:rotateY(-70deg);opacity:.1}to{transform:none;opacity:1}}
+@keyframes flipPrev{from{transform:rotateY(70deg);opacity:.1}to{transform:none;opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.book *{animation:none!important}}
+.kap{font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.page h1{font-size:1.65rem;line-height:1.2;margin:.2em 0 .5em;font-weight:600;text-wrap:balance}
+.page p{margin:.55em 0;max-width:62ch}
+.lead{font-size:1.1rem}
+.pno{position:absolute;left:30px;bottom:14px;color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
+.task,.merke{margin:14px 0;padding:11px 15px;border-radius:10px;max-width:62ch}
+.task{background:var(--tint);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+.merke{border:2px solid var(--gold);background:color-mix(in srgb,var(--gold) 10%,transparent)}
+.steps{margin:.4em 0;padding-left:1.3em;max-width:62ch}.steps li{margin:.4em 0}
+.status{min-height:1.7em;font-weight:500;margin:.6em 0}
+.status.ok{color:var(--ok)}.status.no{color:var(--no)}
+.hint{color:var(--muted);font-size:.9rem}
+.more{margin:12px 0;max-width:62ch;font-size:.95rem}.more summary{cursor:pointer;color:var(--accent);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.defbox{min-height:4.5em;padding:12px 14px;border-radius:10px;background:var(--tint);max-width:62ch}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.quiz{margin:16px 0;padding:12px 14px;border:1px solid var(--line);border-radius:10px;max-width:62ch}
+.quiz .q{margin:0 0 8px}.quiz .opts{display:grid;gap:8px}.quiz .opt{text-align:left}
+.quiz .opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--paper))}
+.quiz .opt.wrong{border-color:var(--no);background:color-mix(in srgb,var(--no) 12%,var(--paper))}
+.quiz .fb{min-height:1.4em;margin:8px 0 0;font-weight:500}.quiz .fb.ok{color:var(--ok)}.quiz .fb.no{color:var(--no)}
+
+/* ---- Figuren ---- */
+.fig{display:flex;flex-direction:column;gap:10px}
+.fsvg{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none;background:var(--paper);border:1px solid var(--line);border-radius:10px}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.sl{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.92rem}
+.sl input[type=range]{width:min(260px,60vw);accent-color:var(--accent);min-height:32px}
+.readout{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.92rem;font-variant-numeric:tabular-nums}
+.readout b{font-weight:600}
+.tbl{border-collapse:collapse;font-size:.92rem;font-variant-numeric:tabular-nums;width:100%}
+.tbl th,.tbl td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+.tbl th{background:var(--tint);font-weight:600}
+.tbl td.hl,.tbl th.hl{background:color-mix(in srgb,var(--accent) 16%,var(--paper))}
+.scroll{overflow-x:auto}
+.axis{stroke:var(--axis);stroke-width:1.5;stroke-dasharray:7 6;fill:none}
+.ray{stroke:var(--ray);stroke-width:2.6;stroke-linecap:round;fill:none}
+.head{fill:var(--ray)}
+.ext{stroke:var(--ray);stroke-width:2;stroke-dasharray:6 6;fill:none;opacity:.85}
+.lotl{stroke:var(--lot);stroke-width:4.6;stroke-linecap:round;fill:none}
+.mir{stroke:var(--mirror);stroke-width:6;stroke-linecap:round;fill:none}
+.mir.thin{stroke-width:4}
+.hatch{stroke:var(--mirror);stroke-width:1.7;opacity:.75}
+.tan{stroke:var(--muted);stroke-width:1.8;stroke-dasharray:4 4;fill:none}
+.pt{fill:var(--ink)}
+.ring{fill:none;stroke:var(--axis);stroke-width:2}
+.focus{fill:var(--gold);stroke:var(--ink);stroke-width:1.5}
+.fsvg text{pointer-events:none}
+.hnd{cursor:grab}.hnd:active{cursor:grabbing}
+.handle{fill:var(--paper);stroke:var(--lot);stroke-width:3.5}
+.handle.ok{stroke:var(--ok)}
+.handle.ray-h{stroke:var(--ray)}
+.arc{fill:none;stroke:var(--muted);stroke-width:2}
+.lbl{fill:var(--ink);font:600 17px "Lexend",system-ui,sans-serif}
+.lbl-s{fill:var(--muted);font:400 14px "Lexend",system-ui,sans-serif}
+.lbl-lot{fill:var(--lot);font:600 17px "Lexend",system-ui,sans-serif}
+.lbl-g{fill:var(--gold);font:700 19px "Lexend",system-ui,sans-serif}
+.lbl-img{fill:var(--img);font:600 16px "Lexend",system-ui,sans-serif}
+.lbl-obj{fill:var(--obj);font:600 16px "Lexend",system-ui,sans-serif}
+.obj{stroke:var(--obj);stroke-width:5;stroke-linecap:round;fill:none}
+.objhead{fill:var(--obj)}
+.imgl{stroke:var(--img);stroke-width:5;stroke-linecap:round;fill:none}
+.imgl.virt{stroke-dasharray:3 9}
+.imghead{fill:var(--img)}
+.hot{fill:color-mix(in srgb,var(--gold) 25%,transparent);stroke:var(--gold);stroke-width:3;cursor:pointer;animation:pulse 1.3s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:drawl .9s ease forwards}
+@keyframes drawl{to{stroke-dashoffset:0}}
+.tg{transition:opacity .2s}.tg.dim{opacity:.22}
+.bundle{fill:rgba(255,196,0,.16);stroke:none}
+.bundle.v{fill:rgba(120,90,220,.10)}
+.eye-w{fill:var(--paper);stroke:var(--ink);stroke-width:2.5}
+.eye-p{fill:var(--ink)}
+.dimmer{fill:rgba(15,22,30,.58)}
+.bracket{stroke:#fff;stroke-width:3;paint-order:stroke}
+.edge{stroke:var(--ink);stroke-width:2}
+
+/* ---- Navigation ---- */
+.pager{display:flex;align-items:center;gap:12px}
+.dots{flex:1;display:flex;justify-content:center;flex-wrap:wrap;gap:6px}
+.dot{width:12px;height:12px;border-radius:99px;border:2px solid var(--muted);background:transparent;padding:0;cursor:pointer;min-height:0;touch-action:manipulation}
+.dot.done{background:var(--ok);border-color:var(--ok)}
+.dot.lock{opacity:.35}
+.lockmsg{color:var(--no);font-weight:500;min-height:1.4em}
+.dot.cur{width:28px;border-color:var(--accent);background:var(--accent)}
+.toc{position:fixed;inset:0;z-index:20;background:rgba(8,14,20,.6);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.toc[hidden]{display:none}
+.toc .sheet{background:var(--paper);color:var(--ink);border-radius:12px;max-width:560px;width:100%;padding:20px 22px;box-shadow:0 20px 50px var(--shadow)}
+.toc h2{margin:0 0 8px;font-size:1.2rem}
+.toc h3{margin:14px 0 4px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.toc button.entry{display:flex;gap:10px;width:100%;text-align:left;padding:8px 6px;border:0;background:transparent;font:inherit;color:inherit;border-radius:8px;cursor:pointer;min-height:44px;align-items:center}
+.toc button.entry:hover{background:var(--tint)}
+.toc .n{width:1.8em;color:var(--muted);font-variant-numeric:tabular-nums}
+.toc .ck{margin-left:auto;color:var(--ok)}
+
+@media (max-width:900px){
+  .book{grid-template-columns:1fr;min-height:0}
+  .page{padding:20px 18px 48px}
+  .page.right{border-left:0;border-top:1px solid var(--line);box-shadow:none;padding-bottom:20px}
+  .pno{left:18px}
+}
+
+.page.right .fig{position:sticky;top:12px}
+.gray .ray,.gray .lotl,.gray .arc,.gray .tan{stroke:var(--axis)}.gray .head{fill:var(--axis)}.gray text{fill:var(--axis)}
+.rseg{stroke:var(--gold);stroke-width:5;stroke-linecap:round}
+.brk{stroke:var(--ink);stroke-width:2;fill:none}
+.cloze{margin:16px 0;padding:12px 14px;border:1px solid var(--line);border-radius:10px;max-width:62ch}
+.cloze .ct{line-height:2.3;margin:.3em 0 .7em}
+.cloze select{font:inherit;min-height:40px;border:2px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);padding:2px 6px;margin:0 3px}
+.cloze select.ok{border-color:var(--ok)}.cloze select.no{border-color:var(--no)}
+.cloze .fb{min-height:1.4em;margin:8px 0 0;font-weight:500}.cloze .fb.ok{color:var(--ok)}.cloze .fb.no{color:var(--no)}
+.ans td.ok{color:var(--ok);font-weight:700}.ans td.no{color:var(--no);font-weight:700}.ans .pg{display:block;color:var(--muted);font-size:.78rem}
+@media (max-width:900px){.page.right .fig{position:static}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <button class="btn" id="tocBtn" type="button">☰ Inhalt</button>
+    <div class="run" id="run"></div>
+  </header>
+  <main class="book" id="book">
+    <article class="page left" id="pl"></article>
+    <article class="page right" id="pr"></article>
+  </main>
+  <nav class="pager" aria-label="Blättern">
+    <button class="btn" id="prev" type="button">‹ Zurück</button>
+    <div class="dots" id="dots"></div>
+    <button class="btn pri" id="next" type="button">Weiter ›</button>
+  </nav>
+</div>
+<div class="toc" id="toc" hidden><div class="sheet" role="dialog" aria-modal="true" aria-label="Inhaltsverzeichnis"><h2>Inhalt</h2><div id="tocList"></div><p><button class="btn" id="tocClose" type="button">Schließen</button></p></div></div>
+
+<script>
+(()=>{
+'use strict';
+const NS='http://www.w3.org/2000/svg';
+const $=(s,r=document)=>r.querySelector(s);
+const el=(n,a={},p)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+const html=s=>{const t=document.createElement('template');t.innerHTML=s.trim();return t.content.firstElementChild};
+const rad=a=>a*Math.PI/180,deg=r=>r*180/Math.PI,clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const add=(a,b,k=1)=>({x:a.x+b.x*k,y:a.y+b.y*k}),sub=(a,b)=>({x:a.x-b.x,y:a.y-b.y}),dot=(a,b)=>a.x*b.x+a.y*b.y,cross=(a,b)=>a.x*b.y-a.y*b.x;
+const unit=a=>{const l=Math.hypot(a.x,a.y)||1;return{x:a.x/l,y:a.y/l}};
+const dirA=a=>({x:Math.cos(rad(a)),y:Math.sin(rad(a))});
+const angOf=v=>deg(Math.atan2(v.y,v.x));
+const reflect=(d,n)=>{const k=2*dot(d,n);return{x:d.x-k*n.x,y:d.y-k*n.y}};
+const norm180=a=>((a+180)%360+360)%360-180;
+const dmLine=(a,b)=>{const d=Math.abs(a-b)%180;return Math.min(d,180-d)};
+const fmt=(v,d=1)=>v.toFixed(d).replace('.',',');
+const SC=20; /* 20 Zeichen-Einheiten = 1 cm */
+
+let doneMap={},ans={};
+try{doneMap=JSON.parse(localStorage.getItem('spiegel-done')||'{}')}catch(e){}
+try{ans=JSON.parse(localStorage.getItem('spiegel-ans')||'{}')}catch(e){}
+function markDone(id){if(doneMap[id])return;doneMap[id]=1;try{localStorage.setItem('spiegel-done',JSON.stringify(doneMap))}catch(e){}renderDots()}
+function rec(id,a,ok){ans[id]={a,ok};try{localStorage.setItem('spiegel-ans',JSON.stringify(ans))}catch(e){}}
+
+const mkSvg=(w,h,label)=>el('svg',{viewBox:`0 0 ${w} ${h}`,class:'fsvg',role:'img','aria-label':label});
+const txt=(p,x,y,s,cls='lbl',anchor='middle')=>{const t=el('text',{x,y,class:cls,'text-anchor':anchor},p);t.textContent=s;return t};
+const pnt=(g,p,r=5,cls='pt')=>el('circle',{cx:p.x,cy:p.y,r,class:cls},g);
+const seg=(g,a,b,cls)=>el('line',{x1:a.x.toFixed(1),y1:a.y.toFixed(1),x2:b.x.toFixed(1),y2:b.y.toFixed(1),class:cls},g);
+function arrowAt(g,A,B,t=.5,s=9,cls='head'){const p={x:A.x+(B.x-A.x)*t,y:A.y+(B.y-A.y)*t};
+  return el('path',{d:`M${-s} ${-s*.55}L${s*.7} 0L${-s} ${s*.55}Z`,transform:`translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${angOf(sub(B,A)).toFixed(1)})`,class:cls},g)}
+function arcPath(c,r,a0,a1){const d=norm180(a1-a0),p0=add(c,dirA(a0),r),p1=add(c,dirA(a0+d),r);
+  return `M${p0.x.toFixed(1)} ${p0.y.toFixed(1)}A${r} ${r} 0 0 ${d>0?1:0} ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`}
+function svgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const m=svg.getScreenCTM();return m?p.matrixTransform(m.inverse()):{x:0,y:0}}
+function dragger(svg,pick,onMove,onEnd,onStart){let id=null;
+  svg.addEventListener('pointerdown',e=>{if(!pick(e.target))return;id=e.pointerId;try{svg.setPointerCapture(id)}catch(_){}e.preventDefault();onStart&&onStart(svgPt(svg,e))});
+  svg.addEventListener('pointermove',e=>{if(e.pointerId===id)onMove(svgPt(svg,e))});
+  const up=e=>{if(e.pointerId!==id)return;id=null;onEnd&&onEnd()};
+  svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',up)}
+const picker=sel=>t=>!!(t.closest&&t.closest(sel));
+
+/* Spiegel als Kreisbogen. Optische Achse waagerecht, Licht kommt von links. */
+function bench(kind,r,xs,y0){const sg=kind==='concave'?1:-1,M={x:xs+(kind==='concave'?-r:r),y:y0};
+  return{kind,r,xs,y0,M,sg,
+    pt(hh){const dx=Math.sqrt(Math.max(0,r*r-hh*hh));return{x:M.x+sg*dx,y:y0+hh}},
+    pa(th){const t=rad(th);return{x:M.x+sg*r*Math.cos(t),y:y0+r*Math.sin(t)}},
+    n(P){return unit(sub(P,M))},
+    back(P){const n=unit(sub(P,M));return sg>0?n:{x:-n.x,y:-n.y}}}}
+function drawMirror(g,geo,hMax){const pts=[];for(let i=-24;i<=24;i++)pts.push(geo.pt(hMax*i/24));
+  el('path',{d:'M'+pts.map(p=>`${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join('L'),class:'mir'},g);
+  for(let i=-12;i<=12;i++){const p=geo.pt(hMax*i/12),b=geo.back(p),t={x:-b.y,y:b.x};seg(g,p,add(add(p,b,14),t,9),'hatch')}}
+/* Schnittpunkt einer Geraden (durch A und B) mit dem Spiegelbogen */
+function hitArc(geo,A,B,hMax){const M=geo.M,r=geo.r,d=sub(B,A),a=dot(d,d),b=2*dot(sub(A,M),d),c=dot(sub(A,M),sub(A,M))-r*r,D=b*b-4*a*c;if(D<0||a<1e-9)return null;
+  const sq=Math.sqrt(D),pts=[(-b-sq)/(2*a),(-b+sq)/(2*a)].map(t=>add(A,d,t)).filter(P=>geo.sg*(P.x-M.x)>0&&Math.abs(P.y-geo.y0)<=hMax);
+  if(!pts.length)return null;pts.sort((p,q)=>geo.sg*(q.x-p.x));return pts[0]}
+
+/* ===== Aufgaben (Quiz und Lückentext) ===== */
+const QS=[
+ {id:'refl',pg:'Seite 2',type:'c',text:'Das Lot steht {0} auf dem Spiegel. Der Einfallswinkel α und der Ausfallswinkel β sind {1}.',gaps:[{opts:['parallel','senkrecht','schräg'],ans:1},{opts:['gleich groß','verschieden groß'],ans:0}]},
+ {id:'terms',pg:'Seite 3',type:'q',q:'Auf welche Seite des Hohlspiegels trifft das Licht?',opts:['Auf die Außenseite','Auf die Innenseite (Hohlseite)','Auf die Kante'],ans:1,why:'Der Hohlspiegel ist innen verspiegelt.'},
+ {id:'lot',pg:'Seite 4',type:'c',text:'Das Lot geht beim Hohlspiegel immer durch den {0}.',gaps:[{opts:['Scheitel S','Mittelpunkt M','Rand des Spiegels'],ans:1}]},
+ {id:'par',pg:'Seite 5',type:'c',text:'Strahlen, die parallel zur optischen Achse auf den Hohlspiegel fallen, laufen nach der Reflexion durch den {0}.',gaps:[{opts:['Brennpunkt F','Scheitel S','Mittelpunkt M'],ans:0}]},
+ {id:'foc1',pg:'Seite 6',type:'q',q:'Wie hängen Brennweite f und Radius r zusammen?',opts:['Die Brennweite f ist genauso groß wie der Radius r.','Die Brennweite f ist halb so groß wie der Radius r.','Die Brennweite f ist doppelt so groß wie der Radius r.'],ans:1,why:'F liegt in der Mitte zwischen S und M.',hint:'Lies am Lineal ab, wo F liegt, und vergleiche mit r.'},
+ {id:'foc2',pg:'Seite 6',type:'c',text:'Ein Hohlspiegel hat den Radius r = 10 cm. Seine Brennweite f ist dann {0}.',gaps:[{opts:['10 cm','20 cm','5 cm'],ans:2}]},
+ {id:'o1',pg:'Seite 7',type:'q',q:'Wie weit liegt das Spiegelbild hinter dem Planspiegel?',opts:['Genauso weit wie der Gegenstand davor.','Doppelt so weit wie der Gegenstand davor.','Es liegt direkt auf dem Spiegel.'],ans:0,why:'Beim Planspiegel liegt das Spiegelbild genauso weit hinter dem Spiegel, wie der Gegenstand davor steht.',hint:'Lies „Spiegelbild: … hinter dem Spiegel“ unter der Zeichnung ab.'},
+ {id:'o2',pg:'Seite 8',type:'c',text:'Im Hohlspiegel sieht der Beobachter {0} vom Schriftzug als im Planspiegel. Das Spiegelbild ist {1}.',gaps:[{opts:['mehr','weniger'],ans:1},{opts:['verkleinert','vergrößert'],ans:1}]},
+ {id:'o3',pg:'Seite 9',type:'c',text:'Im Wölbspiegel sieht der Beobachter {0} vom Schriftzug als im Planspiegel. Das Spiegelbild ist {1}.',gaps:[{opts:['mehr','weniger'],ans:0},{opts:['vergrößert','verkleinert'],ans:1}]},
+ {id:'c1',pg:'Seite 10',type:'q',q:'Welcher Spiegel zeigt am meisten vom Schriftzug?',opts:['Der Planspiegel','Der Hohlspiegel','Der Wölbspiegel'],ans:2,why:'Der Wölbspiegel zeigt am meisten.',hint:'Vergleiche die Zeile „Sichtbarer Ausschnitt“ in der Tabelle.'},
+ {id:'c2',pg:'Seite 10',type:'q',q:'Welcher Spiegel macht das Spiegelbild größer als den Gegenstand?',opts:['Der Planspiegel','Der Hohlspiegel','Der Wölbspiegel'],ans:1,why:'Nur der Hohlspiegel vergrößert (wenn der Gegenstand nah am Spiegel steht).',hint:'Vergleiche die Zeile „Größe des Spiegelbilds“.'},
+ {id:'c3',pg:'Seite 10',type:'q',q:'Warum hängt an einer unübersichtlichen Kreuzung ein Wölbspiegel?',opts:['Man sieht damit besonders viel von der Straße.','Man sieht damit alles größer.','Er ist billiger als ein Planspiegel.'],ans:0,why:'Der Wölbspiegel zeigt einen großen Ausschnitt.'},
+ {id:'z1',pg:'Zusatz 1',type:'q',q:'Ein Strahl läuft durch den Brennpunkt F zum Hohlspiegel. Wie geht er nach der Reflexion weiter?',opts:['Parallel zur optischen Achse.','Durch den Mittelpunkt M.','Zurück durch F.'],ans:0,why:'Der Brennpunktstrahl wird parallel zur optischen Achse reflektiert.'},
+ {id:'z2',pg:'Zusatz 2',type:'q',q:'Der Gegenstand steht im Mittelpunkt M (g = 14 cm, f = 7 cm). Wie ist das Bild?',opts:['Gleich groß und auf dem Kopf.','Vergrößert und aufrecht.','Verkleinert und auf dem Kopf.'],ans:0,why:'Im Mittelpunkt M ist das Bild gleich groß und steht auf dem Kopf.',hint:'Stelle g = 14 cm ein und sieh dir das Bild an.'},
+ {id:'z3',pg:'Zusatz 3',type:'q',q:'Der Gegenstand steht nah am Hohlspiegel (g = 4 cm, f = 7 cm). Wie ist das Bild?',opts:['Es steht auf dem Kopf und ist kleiner.','Es ist aufrecht, größer und liegt hinter dem Spiegel.','Es ist aufrecht, kleiner und liegt hinter dem Spiegel.'],ans:1,why:'Nah am Hohlspiegel ist das Bild aufrecht, größer und virtuell.',hint:'Schau, wo das Bild liegt und wie groß es ist.'},
+ {id:'z4',pg:'Zusatz 4',type:'q',q:'Welches Bild entsteht am Wölbspiegel?',opts:['Immer aufrecht und kleiner als der Gegenstand.','Auf dem Kopf stehend.','Aufrecht und größer.'],ans:0,why:'Der Wölbspiegel macht immer ein aufrechtes, verkleinertes Bild.',hint:'Verschiebe den Gegenstand an verschiedene Stellen.'}
+];
+['cover','lot','par','sum'].forEach(()=>{});
+const Qd=Object.fromEntries(QS.map(q=>[q.id,q]));
+function quiz(host,id,ctx){const o=Qd[id];ctx.need.add(id);
+  const box=html(`<div class="quiz"><p class="q"><b>${o.q}</b></p><div class="opts"></div><p class="fb" aria-live="polite"></p></div>`);
+  const fb=$('.fb',box);
+  o.opts.forEach((t,i)=>{const b=html(`<button class="btn opt" type="button">${t}</button>`);
+    b.onclick=()=>{const ok=i===o.ans;rec(id,t,ok);
+      if(ok){fb.textContent='✓ Richtig. '+o.why;fb.className='fb ok';b.classList.add('right');ctx.done(id)}
+      else{fb.textContent='Noch nicht richtig. '+(o.hint||'Probiere es noch einmal.');fb.className='fb no';b.classList.add('wrong')}};
+    $('.opts',box).appendChild(b)});
+  host.appendChild(box)}
+function cloze(host,id,ctx){const o=Qd[id];ctx.need.add(id);
+  const box=html('<div class="cloze"><p class="q"><b>Lückentext: Wähle die richtigen Wörter.</b></p><p class="ct"></p><button class="btn chip" type="button">Prüfen</button><p class="fb" aria-live="polite"></p></div>');
+  const ct=$('.ct',box),fb=$('.fb',box),sels=[];
+  o.text.split(/\{(\d+)\}/).forEach((p,i)=>{if(i%2===0)ct.appendChild(document.createTextNode(p));else{const g=o.gaps[+p],s=document.createElement('select');s.setAttribute('aria-label','Lücke '+(+p+1));
+    s.innerHTML='<option value="">…</option>'+g.opts.map((t,j)=>`<option value="${j}">${t}</option>`).join('');ct.appendChild(s);sels.push(s)}});
+  $('button',box).onclick=()=>{let all=true;
+    sels.forEach((s,i)=>{if(s.value===''){all=false;s.className='';return}const k=+s.value===o.gaps[i].ans;s.className=k?'ok':'no';if(!k)all=false});
+    const sent=o.text.replace(/\{(\d+)\}/g,(m,n)=>{const s=sels[+n];return s.value===''?'…':o.gaps[+n].opts[+s.value]});
+    if(sels.some(s=>s.value==='')){fb.textContent='Wähle in jeder Lücke ein Wort.';fb.className='fb no';return}
+    rec(id,sent,all);
+    if(all){fb.textContent='✓ Richtig!';fb.className='fb ok';ctx.done(id)}else{fb.textContent='Noch nicht ganz. Die rot markierten Lücken sind falsch.';fb.className='fb no'}};
+  host.appendChild(box)}
+const ask=(host,id,ctx)=>(Qd[id].type==='c'?cloze:quiz)(host,id,ctx);
+
+/* ===== Titelseite ===== */
+function figCover(host){
+  const svg=mkSvg(720,400,'Hohlspiegel mit Strahlen, die sich im Brennpunkt treffen, und Wölbspiegel mit auseinanderlaufenden Strahlen');host.appendChild(svg);
+  const y0=200,A=bench('concave',230,310,y0),B=bench('convex',230,620,y0);
+  seg(svg,{x:20,y:y0},{x:700,y:y0},'axis');
+  drawMirror(svg,A,125);drawMirror(svg,B,125);
+  [-85,-30,30,85].forEach(hh=>{
+    let P=A.pt(hh),dr=reflect({x:1,y:0},A.n(P));
+    seg(svg,{x:30,y:P.y},P,'ray');arrowAt(svg,{x:30,y:P.y},P,.4);
+    let t=(36-P.x)/dr.x;const e=add(P,dr,t);seg(svg,P,e,'ray');arrowAt(svg,P,e,.35);
+    P=B.pt(hh);dr=reflect({x:1,y:0},B.n(P));
+    seg(svg,{x:380,y:P.y},P,'ray');arrowAt(svg,{x:380,y:P.y},P,.4);
+    t=(390-P.x)/dr.x;const e2=add(P,dr,t);seg(svg,P,e2,'ray');arrowAt(svg,P,e2,.5)});
+  pnt(svg,{x:195,y:y0},7,'focus');txt(svg,195,y0+30,'F','lbl-g');
+  txt(svg,180,382,'Hohlspiegel','lbl');txt(svg,520,382,'Wölbspiegel','lbl')}
+
+/* ===== Reflexion am ebenen Spiegel ===== */
+function figPlane(host,ctx){
+  const W=640,H=420,svg=mkSvg(W,H,'Reflexion am ebenen Spiegel mit Lot, Einfallswinkel und Ausfallswinkel');host.appendChild(svg);
+  const Pm={x:320,y:330},L=240,st=ctx.q('#st');
+  seg(svg,{x:100,y:Pm.y},{x:540,y:Pm.y},'mir');for(let x=112;x<=540;x+=16)seg(svg,{x,y:Pm.y},{x:x-10,y:Pm.y+14},'hatch');
+  const g=el('g',{},svg);let alpha=42;const seen=new Set();
+  function draw(){g.innerHTML='';
+    const S=add(Pm,{x:-Math.sin(rad(alpha)),y:-Math.cos(rad(alpha))},L),R=add(Pm,{x:Math.sin(rad(alpha)),y:-Math.cos(rad(alpha))},L);
+    seg(g,Pm,{x:Pm.x,y:Pm.y-L-8},'lotl');txt(g,Pm.x+14,Pm.y-L,'Lot','lbl-lot','start');
+    seg(g,S,Pm,'ray');arrowAt(g,S,Pm,.5);seg(g,Pm,R,'ray');arrowAt(g,Pm,R,.5);
+    el('path',{d:arcPath(Pm,78,-90,-90-alpha),class:'arc'},g);el('path',{d:arcPath(Pm,98,-90,-90+alpha),class:'arc'},g);
+    const pa=add(Pm,dirA(-90-alpha/2),122),pb=add(Pm,dirA(-90+alpha/2),140);
+    txt(g,pa.x,pa.y,'α = '+Math.round(alpha)+'°');txt(g,pb.x,pb.y,'β = '+Math.round(alpha)+'°');
+    pnt(g,Pm,5);txt(g,Pm.x,Pm.y+34,'Spiegel','lbl-s');
+    el('circle',{cx:S.x,cy:S.y,r:17,class:'hnd handle'},g);txt(g,S.x,S.y+5,'↻','lbl');
+    txt(g,S.x,S.y-26,'Lichtquelle: ziehen','lbl-s');
+    st.textContent=`α = ${Math.round(alpha)}° und β = ${Math.round(alpha)}°. Beide sind gleich groß.`}
+  dragger(svg,picker('.hnd'),p=>{const v=sub(p,Pm);alpha=clamp(deg(Math.atan2(-v.x,-v.y)),8,78);seen.add(Math.round(alpha/12));draw();if(seen.size>=3)ctx.done()});
+  draw()}
+
+/* ===== Begriffe am Hohlspiegel ===== */
+function figTerms(host,ctx){
+  const W=640,H=420,svg=mkSvg(W,H,'Hohlspiegel mit Scheitel, Mittelpunkt, Radius und optischer Achse');host.appendChild(svg);
+  const y0=210,geo=bench('concave',250,560,y0),M=geo.M,S={x:560,y:y0};
+  const T={};const grp=k=>T[k]=el('g',{class:'tg'},svg);
+  const gA=grp('achse');seg(gA,{x:30,y:y0},{x:610,y:y0},'axis');txt(gA,150,y0-12,'optische Achse','lbl-s');
+  const gH=grp('hohl');drawMirror(gH,geo,150);txt(gH,430,62,'Hohlseite (innen)','lbl-s');arrowAt(gH,{x:470,y:70},{x:520,y:95},.99,7);
+  const gR=grp('r');const Pr=geo.pa(-28);seg(gR,M,Pr,'rseg');txt(gR,(M.x+Pr.x)/2-14,(M.y+Pr.y)/2-12,'r','lbl-g');
+  const gS=grp('S');pnt(gS,S,7);txt(gS,S.x-2,S.y+30,'S','lbl');
+  const gM=grp('M');pnt(gM,M,7);txt(gM,M.x,M.y+30,'M','lbl');
+  const defs={
+    achse:'<b>Optische Achse:</b> Die gestrichelte Linie durch die Mitte des Spiegels.',
+    hohl:'<b>Hohlseite:</b> Die verspiegelte Innenseite. Hier trifft das Licht auf.',
+    S:'<b>Scheitel S:</b> Die Mitte der Spiegelfläche.',
+    M:'<b>Mittelpunkt M:</b> Der Mittelpunkt der Kugel. Er liegt vor dem Spiegel auf der optischen Achse.',
+    r:'<b>Radius r:</b> So weit ist M vom Spiegel entfernt (gelbe Strecke).'};
+  const chips=ctx.q('#chips'),box=ctx.q('#def'),seen=new Set(),bt=[];let cur=null;
+  function sel(k){cur=cur===k?null:k;for(const t in T)T[t].classList.toggle('dim',!!cur&&t!==cur);
+    bt.forEach(b=>b.classList.toggle('on',b.dataset.t===cur));
+    box.innerHTML=cur?defs[cur]:'Wähle einen Begriff.';if(cur)seen.add(cur);if(seen.size>=5)ctx.done()}
+  [['achse','optische Achse'],['hohl','Hohlseite'],['S','Scheitel S'],['M','Mittelpunkt M'],['r','Radius r']].forEach(([k,l])=>{
+    const b=html(`<button class="btn chip" type="button" data-t="${k}">${l}</button>`);b.onclick=()=>sel(k);chips.appendChild(b);bt.push(b)})}
+
+/* ===== Lot am Hohlspiegel (zwei Punkte) ===== */
+function figLot(host,ctx){
+  const W=640,H=420,svg=mkSvg(W,H,'Hohlspiegel mit zwei Punkten und drehbaren Loten');host.appendChild(svg);
+  const r=250,geo=bench('concave',r,560,210),M=geo.M,TH=[-27,24],OFF=[40,-36],N=2;
+  const psi=TH.map((t,i)=>t+180+OFF[i]),ok=[false,false];let act=0,revealed=false,anim=false;
+  const st=ctx.q('#st'),rev=ctx.q('#rev');
+  const chips=html('<div class="chips"></div>');host.appendChild(chips);
+  const cb=TH.map((_,i)=>{const b=html(`<button class="btn chip" type="button">Punkt P${i+1}</button>`);b.onclick=()=>{act=i;draw()};chips.appendChild(b);return b});
+  const stat=el('g',{},svg),dyn=el('g',{},svg);
+  seg(stat,{x:30,y:210},{x:610,y:210},'axis');drawMirror(stat,geo,150);
+  const flat=(i,len)=>{const P=geo.pa(TH[i]),t=dirA(TH[i]+90);return[add(P,t,-len),add(P,t,len)]};
+  function angLT(i){const a=(((psi[i]-(TH[i]+90))%180)+180)%180;return Math.min(a,180-a)}
+  function draw(){dyn.innerHTML='';
+    TH.forEach((t,i)=>{const P=geo.pa(t),u=dirA(t+180);
+      if(ok[i]){const [a,b]=flat(i,60);seg(dyn,a,b,'tan');
+        const l=seg(dyn,add(P,u,-50),add(P,u,revealed?r+40:130),'lotl'+(anim?' draw':''));if(anim)l.setAttribute('pathLength','1');
+        const q1=add(P,u,15),q2=add(P,dirA(t+90),15);el('path',{d:`M${q1.x} ${q1.y}L${q1.x+q2.x-P.x} ${q1.y+q2.y-P.y}L${q2.x} ${q2.y}`,class:'arc',style:'stroke:var(--ok);stroke-width:2.5'},dyn)}
+      else if(i===act){const [a,b]=flat(i,95);seg(dyn,a,b,'tan');
+        const v=dirA(psi[i]);seg(dyn,add(P,v,-60),add(P,v,125),'lotl');
+        const h=add(P,v,125);el('circle',{cx:h.x,cy:h.y,r:19,class:'hnd handle'},dyn);txt(dyn,h.x,h.y+5,'↻','lbl-lot')}
+      pnt(dyn,P,6);txt(dyn,P.x-30,P.y-12,'P'+(i+1),'lbl')});
+    if(revealed){pnt(dyn,M,8,'focus');txt(dyn,M.x,M.y+30,'M','lbl-g')}
+    cb.forEach((b,i)=>{b.classList.toggle('on',i===act);b.textContent=`Punkt P${i+1}`+(ok[i]?' ✓':'')});
+    anim=false}
+  function say(m,c){st.textContent=m;st.className='status '+(c||'')}
+  dragger(svg,picker('.hnd'),p=>{if(ok[act])return;psi[act]=angOf(sub(p,geo.pa(TH[act])));draw();const a=Math.round(angLT(act));
+      say(`Winkel zur gestrichelten Linie: ${a}°`+(a===90?' ✓':' (gesucht: 90°)'),a===90?'ok':'')},
+    ()=>{if(ok[act])return;if(dmLine(psi[act],TH[act])<=2.5){psi[act]=TH[act]+180;ok[act]=true;
+        if(ok.every(Boolean)){revealed=true;anim=true;rev.hidden=false;say('✓ Beide Lote sind konstruiert.','ok');ctx.q('#qz').hidden=false}
+        else{say(`✓ Punkt P${act+1} geschafft. Weiter mit dem anderen Punkt.`,'ok');const n=ok.findIndex(v=>!v);setTimeout(()=>{if(svg.isConnected){act=n;draw()}},800)}}
+      else say('Das Lot steht noch nicht senkrecht zur gestrichelten Linie. Drehe weiter am roten Griff.','no');draw()});
+  draw();say('Drehe am roten Griff.')}
+
+/* ===== Parallele Strahlen (zwei Strahlen) ===== */
+function figParallel(host,ctx){
+  const W=720,H=420,y0=210,xs=650,r=300,geo=bench('concave',r,xs,y0),M=geo.M;
+  const svg=mkSvg(W,H,'Parallele Strahlen am Hohlspiegel');host.appendChild(svg);
+  const HS=[-50,100],d={x:1,y:0},PP=HS.map(h=>geo.pt(h)),UU=PP.map(p=>unit(sub(M,p))),PSI=PP.map(p=>angOf(reflect(d,geo.n(p))));
+  const stage=[0,0],psi=PSI.map((p,i)=>p+(i===1?-42:42));let act=0;
+  const st=ctx.q('#st'),rev=ctx.q('#rev'),bLot=ctx.q('#bLot');
+  const chips=html('<div class="chips"></div>');host.appendChild(chips);
+  const cb=HS.map((_,i)=>{const b=html(`<button class="btn chip" type="button">Strahl ${i+1}</button>`);b.onclick=()=>{act=i;draw()};chips.appendChild(b);return b});
+  const stat=el('g',{},svg),dyn=el('g',{},svg);
+  seg(stat,{x:20,y:y0},{x:700,y:y0},'axis');drawMirror(stat,geo,160);txt(stat,xs,y0+30,'S','lbl');pnt(stat,{x:xs,y:y0},4);
+  pnt(stat,M,6);txt(stat,M.x,M.y+28,'M','lbl');
+  function say(m,c){st.textContent=m;st.className='status '+(c||'')}
+  const angles=i=>{const u=UU[i],rr=dirA(psi[i]);return{a:deg(Math.acos(clamp(-u.x,-1,1))),b:deg(Math.acos(clamp(dot(u,rr),-1,1))),opp:cross(u,{x:-1,y:0})*cross(u,rr)<0}};
+  function draw(){dyn.innerHTML='';const allDone=stage.every(v=>v===2);
+    PP.forEach((P,i)=>{const on=i===act||allDone,g=el('g',{class:on?'':'gray',opacity:on?1:.55},dyn),A={x:36,y:P.y};
+      seg(g,A,P,'ray');arrowAt(g,A,P,.3);
+      if(stage[i]>=1)seg(g,add(P,UU[i],-34),M,'lotl');
+      if(stage[i]===2){const e=add(P,dirA(PSI[i]),(36-P.x)/Math.cos(rad(PSI[i])));seg(g,P,e,'ray');arrowAt(g,P,e,.45)}
+      pnt(g,P,5);txt(g,P.x+14,P.y-12,'P'+(i+1),'lbl')});
+    const P=PP[act],s=stage[act];
+    if(s===0){el('circle',{cx:M.x,cy:M.y,r:20,class:'hot'},dyn);txt(dyn,M.x,M.y+54,'Tippe auf M','lbl-g')}
+    if(s===1){const rr=dirA(psi[act]),E=add(P,rr,175),an=angles(act),u=UU[act];
+      seg(dyn,P,E,'ray');
+      el('path',{d:arcPath(P,58,angOf(u),180),class:'arc'},dyn);el('path',{d:arcPath(P,80,angOf(u),psi[act]),class:'arc'},dyn);
+      const mid=(a0,a1)=>a0+norm180(a1-a0)/2,pa=add(P,dirA(mid(angOf(u),180)),104),pb=add(P,dirA(mid(angOf(u),psi[act])),128);
+      txt(dyn,pa.x,pa.y,'α','lbl');txt(dyn,pb.x,pb.y,'β','lbl');
+      el('circle',{cx:E.x,cy:E.y,r:18,class:'hnd handle ray-h'},dyn);txt(dyn,E.x,E.y+5,'↻','lbl');
+      const good=Math.abs(an.a-an.b)<=2.5&&an.opp;
+      say(`α = ${fmt(an.a)}°   β = ${fmt(an.b)}°`+(good?'  ✓ gleich groß':'  (β soll so groß sein wie α)'),good?'ok':'')}
+    if(s===2){const u=UU[act];el('path',{d:arcPath(P,58,angOf(u),180),class:'arc'},dyn);el('path',{d:arcPath(P,80,angOf(u),PSI[act]),class:'arc'},dyn)}
+    if(allDone){const F={x:xs-r/2,y:y0};pnt(dyn,F,8,'focus');txt(dyn,F.x,F.y-18,'F','lbl-g')}
+    cb.forEach((b,i)=>{b.classList.toggle('on',i===act);b.textContent=`Strahl ${i+1}`+(stage[i]===2?' ✓':'')});
+    bLot.disabled=stage[act]!==0}
+  function lot(){if(stage[act]!==0)return;stage[act]=1;draw();say('Das Lot ist eingezeichnet. Drehe jetzt den Strahl am Griff, bis β so groß ist wie α.')}
+  bLot.onclick=lot;svg.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.hot'))lot()});
+  dragger(svg,picker('.hnd'),p=>{if(stage[act]!==1)return;psi[act]=angOf(sub(p,PP[act]));draw()},()=>{
+    if(stage[act]!==1)return;const an=angles(act);
+    if(Math.abs(an.a-an.b)<=2.5&&an.opp){const i=act;psi[i]=PSI[i];stage[i]=2;
+      if(stage.every(v=>v===2)){say('✓ Beide Strahlen laufen (fast) durch denselben Punkt: den Brennpunkt F.','ok');rev.hidden=false}
+      else{say(`✓ Strahl ${i+1} geschafft. Weiter mit Strahl ${stage.findIndex(v=>v!==2)+1}.`,'ok');const n=stage.findIndex(v=>v!==2);setTimeout(()=>{if(svg.isConnected){act=n;draw()}},900)}}
+    else say('β ist noch nicht so groß wie α (und der Strahl muss auf der anderen Seite des Lots liegen). Drehe weiter.','no');
+    draw()});
+  draw();say('Tippe auf M, um das Lot einzuzeichnen.')}
+
+/* ===== Brennweite ===== */
+function figFocal(host,ctx){
+  const W=760,H=430,y0=170,xs=720,svg=mkSvg(W,H,'Zwei parallele Strahlen am Hohlspiegel mit Lineal');host.appendChild(svg);
+  const dyn=el('g',{},svg);let rcm=12;const rows=[];
+  const ctrl=html('<div class="ctrls"><label class="sl" for="rs">Radius r = <b id="rv"></b> cm <input id="rs" type="range" min="6" max="15" step="0.5" value="12"></label><button class="btn" id="rec" type="button">Notieren</button></div>');
+  const tbl=html('<div class="scroll"><table class="tbl" hidden><thead><tr><th>r in cm</th><th>f in cm (am Lineal abgelesen)</th></tr></thead><tbody></tbody></table></div>');
+  host.appendChild(ctrl);host.appendChild(tbl);
+  const brk=(g,x1,x2,y,l,cl)=>{seg(g,{x:x1,y},{x:x2,y},'brk');seg(g,{x:x1,y:y-7},{x:x1,y:y+7},'brk');seg(g,{x:x2,y:y-7},{x:x2,y:y+7},'brk');txt(g,(x1+x2)/2,y-9,l,cl)};
+  function draw(){dyn.innerHTML='';const r=rcm*SC,geo=bench('concave',r,xs,y0);
+    seg(dyn,{x:20,y:y0},{x:xs+20,y:y0},'axis');
+    [-.2,.2].forEach(k=>{const P=geo.pt(k*r),dr=reflect({x:1,y:0},geo.n(P));
+      seg(dyn,{x:34,y:P.y},P,'ray');arrowAt(dyn,{x:34,y:P.y},P,.2);const e=add(P,dr,(34-P.x)/dr.x);seg(dyn,P,e,'ray');arrowAt(dyn,P,e,.78)});
+    drawMirror(dyn,geo,r*.3);
+    const F={x:xs-r/2,y:y0},M=geo.M,yr=y0+190;
+    brk(dyn,F.x,xs,y0+86,'f','lbl-g');brk(dyn,M.x,xs,y0+124,'r','lbl');
+    seg(dyn,{x:20,y:yr},{x:xs,y:yr},'tan');
+    for(let i=0;xs-i*SC>=24;i++){const x=xs-i*SC;seg(dyn,{x,y:yr},{x,y:yr-(i%5===0?14:9)},'tan');if(i%2===0)txt(dyn,x,yr+20,String(i),'lbl-s')}
+    txt(dyn,xs-SC*34,yr+44,'Lineal in cm, von S aus gemessen','lbl-s','start');
+    seg(dyn,F,{x:F.x,y:yr},'tan');pnt(dyn,F,8,'focus');txt(dyn,F.x,F.y-16,'F','lbl-g');
+    seg(dyn,M,{x:M.x,y:yr},'tan');pnt(dyn,M,6);txt(dyn,M.x,M.y-14,'M','lbl');txt(dyn,xs,y0-14,'S','lbl');pnt(dyn,{x:xs,y:y0},4);
+    $('#rv',ctrl).textContent=fmt(rcm)}
+  $('#rs',ctrl).oninput=e=>{rcm=+e.target.value;draw()};
+  $('#rec',ctrl).onclick=()=>{rows.push([rcm,rcm/2]);if(rows.length>6)rows.shift();const tb=$('tbody',tbl);tb.innerHTML=rows.map(([a,b])=>`<tr><td>${fmt(a)}</td><td>${fmt(b)}</td></tr>`).join('');$('table',tbl).hidden=false;
+    if(rows.length>=3){ctx.done();ctx.q('#obs').hidden=false}};
+  draw()}
+
+/* ===== Zusatz: die drei besonderen Strahlen (gekrümmter Spiegel) ===== */
+function figRules(host,ctx){
+  const W=840,H=420,xs=560,y0=230,f=140,geo=bench('concave',2*f,xs,y0),F={x:xs-f,y:y0},M=geo.M,HM=172;
+  const svg=mkSvg(W,H,'Parallelstrahl, Brennpunktstrahl und Mittelpunktstrahl am Hohlspiegel');host.appendChild(svg);
+  const stat=el('g',{},svg),dyn=el('g',{},svg);let Q={x:250,y:130},rule='par';const seen=new Set();
+  seg(stat,{x:20,y:y0},{x:820,y:y0},'axis');drawMirror(stat,geo,HM);
+  pnt(stat,F,6,'focus');txt(stat,F.x,y0+28,'F','lbl-g');pnt(stat,M,5);txt(stat,M.x,y0+28,'M','lbl');txt(stat,xs+6,y0+28,'S','lbl','start');
+  const info={par:'<b>Parallelstrahl:</b> Er kommt parallel zur optischen Achse und wird durch den Brennpunkt F reflektiert.',
+    brenn:'<b>Brennpunktstrahl:</b> Er läuft durch F zum Spiegel und wird danach parallel zur optischen Achse reflektiert.',
+    mitte:'<b>Mittelpunktstrahl:</b> Er läuft durch M. Er liegt auf dem Lot und trifft deshalb senkrecht auf. Er läuft auf demselben Weg zurück.'};
+  const tabs=ctx.q('#tabs'),box=ctx.q('#rule');
+  function draw(){dyn.innerHTML='';
+    seg(dyn,{x:Q.x,y:y0},Q,'obj');pnt(dyn,Q,7,'objhead');txt(dyn,Q.x,y0+30,'Gegenstand','lbl-obj');
+    let H1=null;
+    if(rule==='par'){H1=hitArc(geo,Q,add(Q,{x:1,y:0}),HM);if(H1){seg(dyn,Q,H1,'ray');arrowAt(dyn,Q,H1,.5);const dd=unit(sub(F,H1));seg(dyn,H1,add(H1,dd,900),'ray');arrowAt(dyn,H1,add(H1,dd,260),.5)}}
+    if(rule==='brenn'){H1=hitArc(geo,Q,F,HM);if(H1){seg(dyn,Q,H1,'ray');arrowAt(dyn,Q,H1,.5);const e={x:20,y:H1.y};seg(dyn,H1,e,'ray');arrowAt(dyn,H1,e,.4)}}
+    if(rule==='mitte'){H1=hitArc(geo,Q,M,HM);if(H1){const dd=unit(sub(Q,H1));seg(dyn,Q,H1,'ray');seg(dyn,Q,add(Q,dd,110),'ray');arrowAt(dyn,Q,H1,.5);arrowAt(dyn,H1,Q,.8);seg(dyn,H1,M,'lotl');txt(dyn,(H1.x+M.x)/2,(H1.y+M.y)/2-12,'Lot','lbl-lot')}}
+    if(H1)pnt(dyn,H1,5);
+    el('circle',{cx:Q.x,cy:Q.y,r:22,class:'hnd',fill:'transparent'},dyn);box.innerHTML=info[rule]}
+  const bs=[['par','Parallelstrahl'],['brenn','Brennpunktstrahl'],['mitte','Mittelpunktstrahl']].map(([k,l])=>{const b=html(`<button class="btn chip" type="button">${l}</button>`);
+    b.onclick=()=>{rule=k;seen.add(k);bs.forEach(x=>x.b.classList.toggle('on',x.k===k));draw();if(seen.size===3){ctx.done();ctx.q('#qz').hidden=false}};tabs.appendChild(b);return{k,b}});
+  bs[0].b.classList.add('on');seen.add('par');
+  dragger(svg,picker('.hnd'),p=>{Q={x:clamp(p.x,60,F.x-100),y:clamp(p.y,y0-120,y0-20)};draw()});
+  draw()}
+
+/* ===== Zusatz: Bildkonstruktion ===== */
+function figImage(host,ctx,o){
+  const concave=o.kind==='concave',W=840,H=460,xs=concave?560:470,y0=240,f=140,G=50,HM=170,fs=concave?f:-f,geo=bench(o.kind,2*f,xs,y0);
+  const svg=mkSvg(W,H,concave?'Bildkonstruktion am Hohlspiegel':'Bildkonstruktion am Wölbspiegel');host.appendChild(svg);
+  let g=o.g0*SC,moved=false;const on={par:false,brenn:false,img:false,mitte:false};
+  const F={x:xs-fs,y:y0},Mc=geo.M;
+  const stat=el('g',{},svg),dyn=el('g',{},svg);
+  seg(stat,{x:20,y:y0},{x:W-10,y:y0},'axis');drawMirror(stat,geo,HM);
+  [[F,'F',true],[Mc,'M',false]].forEach(([p,l,fo])=>{el('circle',{cx:p.x,cy:p.y,r:fo?7:6,class:concave?(fo?'focus':'pt'):'ring',style:concave?'':'fill:var(--paper)'},stat);txt(stat,p.x,y0+30,concave?l:l+' (hinter dem Spiegel)',fo?'lbl-g':'lbl')});
+  const ctrl=html('<div class="ctrls"><div class="chips" style="margin:0"></div></div>');
+  const sl=html(`<div class="ctrls"><label class="sl" for="gs">Gegenstandsweite g = <b id="gv"></b> cm <input id="gs" type="range" min="1.5" max="21" step="0.1" value="${o.g0}"></label></div>`);
+  const ro=html('<div class="readout" aria-live="polite"></div>');
+  host.appendChild(ctrl);host.appendChild(sl);host.appendChild(ro);
+  const chipBox=$('.chips',ctrl);
+  const defs=[['par','① Parallelstrahl'],['brenn','② Brennpunktstrahl'],['img','③ Bild zeigen'],['mitte','Kontrolle: Mittelpunktstrahl']];
+  const btns=defs.map(([k,l])=>{const b=html(`<button class="btn chip" type="button" aria-pressed="false">${l}</button>`);
+    b.onclick=()=>{on[k]=!on[k];b.setAttribute('aria-pressed',on[k]);draw();check()};chipBox.appendChild(b);return b});
+  const all=html('<button class="btn chip" type="button">Alles zeigen</button>');all.onclick=()=>{defs.forEach(([k],i)=>{on[k]=true;btns[i].setAttribute('aria-pressed','true')});draw();check()};chipBox.appendChild(all);
+  function check(){if(on.par&&on.brenn&&on.img&&moved){ctx.done();ctx.q('#qz').hidden=false}}
+  function draw(){dyn.innerHTML='';const T={x:xs-g,y:y0-G},den=g-fs,inf=Math.abs(den)<5,notes=[];
+    $('#gv',sl).textContent=fmt(g/SC);$('#gs',sl).value=(g/SC).toFixed(1);
+    const I=inf?null:{x:xs-fs*g/den,y:y0+G*fs/den};
+    const og=el('g',{},dyn);seg(og,{x:T.x,y:y0},T,'obj');arrowAt(og,{x:T.x,y:y0},T,.98,10,'objhead');txt(og,T.x,y0+56,'Gegenstand','lbl-obj');
+    el('rect',{x:T.x-28,y:T.y-24,width:56,height:G+48,class:'hnd',fill:'transparent'},og);txt(og,T.x-14,T.y-8,'G','lbl-obj','end');
+    const virt=!!I&&I.x>xs;
+    function reflRay(H1,incEnd){const gg=el('g',{},dyn);seg(gg,T,H1,'ray');arrowAt(gg,T,H1,.5);
+      let dd;if(inf)dd=incEnd;else dd=I.x<H1.x?unit(sub(I,H1)):unit(sub(H1,I));
+      seg(gg,H1,add(H1,dd,1300),'ray');arrowAt(gg,H1,add(H1,dd,260),.5);
+      if(!inf&&(virt||!concave))seg(gg,H1,I,'ext');pnt(gg,H1,4)}
+    if(on.par){const H1=hitArc(geo,T,add(T,{x:1,y:0}),HM);if(H1)reflRay(H1,unit(sub(F,H1)));else notes.push('Der Parallelstrahl trifft den Spiegel hier nicht.')}
+    if(on.brenn){const H2=hitArc(geo,T,F,HM);if(H2)reflRay(H2,{x:-1,y:0});else notes.push('Der Brennpunktstrahl trifft den Spiegel hier außerhalb der Zeichnung.')}
+    if(on.mitte){const H3=hitArc(geo,T,Mc,HM);if(H3){const gg=el('g',{},dyn),dd=unit(sub(T,H3));seg(gg,T,H3,'ray');seg(gg,H3,add(T,dd,300),'ray');arrowAt(gg,T,H3,.4);arrowAt(gg,H3,T,.8);
+      seg(gg,H3,Mc,'lotl');if(!inf&&(virt||!concave))seg(gg,H3,I,'ext');pnt(gg,H3,4)}else notes.push('Der Mittelpunktstrahl trifft den Spiegel hier nicht.')}
+    let desc='',bTxt='',BTxt='';
+    if(inf)notes.push('Der Gegenstand steht im Brennpunkt: Die reflektierten Strahlen laufen parallel. Es entsteht kein Bild.');
+    else{const real=I.x<xs,upright=I.y<y0,ratio=Math.abs(I.y-y0)/G;
+      desc=`${real?'reell':'virtuell'} · ${upright?'aufrecht':'umgekehrt'} · ${ratio>1.03?'vergrößert':ratio<.97?'verkleinert':'gleich groß'}`;
+      bTxt=`${fmt(Math.abs(xs-I.x)/SC)} cm ${real?'vor':'hinter'} dem Spiegel`;BTxt=fmt(Math.abs(I.y-y0)/SC);
+      if(on.img){if(I.x<30||I.x>W-20)notes.push('Das Bild liegt außerhalb der Zeichnung.');else{const gi=el('g',{},dyn);
+        seg(gi,{x:I.x,y:y0},I,'imgl'+(real?'':' virt'));arrowAt(gi,{x:I.x,y:y0},I,.98,10,'imghead');txt(gi,I.x+(real?-14:14),I.y+(upright?-12:26),'Bild','lbl-img',real?'end':'start');
+        if(on.par&&on.brenn)pnt(gi,I,6,'focus')}}}
+    ro.innerHTML=`<span>g = <b>${fmt(g/SC)} cm</b></span><span>f = <b>${fmt(f/SC)} cm</b></span><span>Gegenstand G = <b>${fmt(G/SC)} cm</b></span>`+
+      (inf?'':`<span>Bild B = <b>${BTxt} cm</b></span><span>Lage: <b>${bTxt}</b></span><span>Das Bild ist: <b>${desc}</b></span>`);
+    if(notes.length)ro.innerHTML+=`<span style="flex-basis:100%;color:var(--muted)">${notes.join(' ')}</span>`}
+  dragger(svg,picker('.hnd'),p=>{g=clamp(xs-p.x,30,420);if(Math.abs(g/SC-o.g0)>1)moved=true;draw();check()});
+  $('#gs',sl).oninput=e=>{g=+e.target.value*SC;if(Math.abs(g/SC-o.g0)>1)moved=true;draw();check()};
+  draw()}
+
+/* ===== Beobachter-Simulation ===== */
+const SIM={W:900,H:640,cx:450,ym:250,hw:80,R:320,dEye:300,g:80,half:300,sh:34};
+SIM.ys=SIM.ym+SIM.g;SIM.ye=SIM.ym+SIM.dEye;
+function mirrorAt(kind,s){const {cx,ym,hw,R}=SIM;
+  if(kind==='plane')return{P:{x:cx+s*hw,y:ym},n:{x:0,y:-1}};
+  const th=Math.asin(s*hw/R);
+  if(kind==='concave'){const M={x:cx,y:ym+R},P={x:M.x+R*Math.sin(th),y:M.y-R*Math.cos(th)};return{P,n:unit(sub(P,M))}}
+  const M={x:cx,y:ym-R},P={x:M.x+R*Math.sin(th),y:M.y+R*Math.cos(th)};return{P,n:unit(sub(P,M))}}
+function imgPlane(kind){const g=SIM.g,f=SIM.R/2;if(kind==='plane')return{b:g,m:1};const b=kind==='concave'?f*g/(f-g):f*g/(g+f);return{b,m:b/g}}
+function trace(kind,xe,s){const {P,n}=mirrorAt(kind,s),E={x:xe,y:SIM.ye},d=unit(sub(P,E)),dr=reflect(d,n);let hit=null,u=0,valid=false;
+  if(dr.y>1e-3){const t=(SIM.ys-P.y)/dr.y;hit={x:P.x+dr.x*t,y:SIM.ys};u=hit.x-SIM.cx;valid=Math.abs(u)<=SIM.half}
+  const ip=imgPlane(kind),yi=SIM.ym-ip.b,ti=(yi-P.y)/d.y;
+  return{P,n,E,d,dr,hit,u,valid,xi:P.x+d.x*ti,yi}}
+function analyze(kind,xe){let lo=1e9,hi=-1e9,bad=0;const K=40;
+  for(let k=0;k<=K;k++){const t=trace(kind,xe,-1+2*k/K);if(t.valid){lo=Math.min(lo,t.u);hi=Math.max(hi,t.u)}else bad++}
+  const ip=imgPlane(kind);return{lo,hi,vis:Math.max(0,(hi-lo)/SC),bad,b:ip.b/SC,m:ip.m}}
+const WORD='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+function figObserver(host,ctx,o){
+  const {W,H,cx,ym,hw,ys,ye,half,sh}=SIM,svg=mkSvg(W,H,'Beobachter vor einem Spiegel, Schriftzug und Spiegelbild');host.appendChild(svg);
+  let kind=o.kind,xe=cx+(o.xe0||0),showExt=true,showImg=true;const moved=new Set();
+  const stat=el('g',{},svg),mg=el('g',{},svg),dyn=el('g',{},svg),eye=el('g',{class:'hnd eye',tabindex:'0','data-keys':'1',role:'slider','aria-label':'Beobachter: mit den Pfeiltasten nach links oder rechts verschieben','aria-valuemin':-320,'aria-valuemax':320},svg);
+  function wordG(parent,color,stroke){const g=el('g',{},parent);
+    el('rect',{x:cx-half,y:ys,width:2*half,height:sh,fill:'var(--paper)',stroke:stroke||'none','stroke-width':2},g);
+    const t=el('text',{x:cx-half+14,y:ys+sh/2,'dominant-baseline':'central',textLength:2*half-28,lengthAdjust:'spacingAndGlyphs',style:`font:700 25px "Lexend",system-ui,sans-serif;fill:${color}`},g);t.textContent=WORD;return g}
+  wordG(stat,'var(--obj)','var(--obj)');
+  for(let i=0;i<=30;i++){const x=cx-half+i*SC;seg(stat,{x,y:ys+sh},{x,y:ys+sh+(i%5===0?10:5)},'tan');if(i%5===0)txt(stat,x,ys+sh+28,String(i),'lbl-s')}
+  txt(stat,cx-half-12,ys+sh/2+5,'Gegenstand','lbl-obj','end');txt(stat,cx+half+12,ys+sh+28,'cm','lbl-s','start');
+  el('circle',{r:36,fill:'transparent'},eye);el('path',{d:'M-26 0Q0 -19 26 0Q0 19 -26 0Z',class:'eye-w'},eye);el('circle',{r:8,cy:-2,class:'eye-p'},eye);
+  txt(eye,0,42,'Beobachter','lbl');txt(eye,-52,5,'◀','lbl-s','end');txt(eye,52,5,'▶','lbl-s','start');
+  function drawMirrorSim(){mg.innerHTML='';const pts=[];for(let i=-20;i<=20;i++)pts.push(mirrorAt(kind,i/20).P);
+    el('path',{d:'M'+pts.map(p=>`${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join('L'),class:'mir'},mg);
+    for(let i=-10;i<=10;i++){const {P,n}=mirrorAt(kind,i/10),b=kind==='convex'?{x:-n.x,y:-n.y}:n,t={x:-b.y,y:b.x};seg(mg,P,add(add(P,b,14),t,9),'hatch')}
+    txt(mg,cx+hw+16,ym-6,{plane:'Planspiegel',concave:'Hohlspiegel',convex:'Wölbspiegel'}[kind],'lbl','start')}
+  const ro=html('<div class="readout" aria-live="polite"></div>');
+  const ctrl=html(`<div class="ctrls"><label class="sl" for="xs">Beobachter verschieben <input id="xs" type="range" min="-320" max="320" step="1" value="${xe-cx}"></label></div>`);
+  const opt=html('<div class="ctrls"><label class="sl"><input type="checkbox" id="cE" checked> gestrichelte Verlängerung</label><label class="sl"><input type="checkbox" id="cI" checked> Spiegelbild zeigen</label></div>');
+  let sw=null;
+  if(o.switchable){sw=html('<div class="chips" role="group" aria-label="Spiegelart"></div>');
+    [['plane','Planspiegel'],['concave','Hohlspiegel'],['convex','Wölbspiegel']].forEach(([k,l])=>{const b=html(`<button class="btn chip" type="button" data-k="${k}" aria-pressed="${k===kind}">${l}</button>`);
+      b.onclick=()=>{kind=k;[...sw.children].forEach(x=>x.setAttribute('aria-pressed',x.dataset.k===k));drawMirrorSim();render();moved.add('k'+k);chk()};sw.appendChild(b)});host.appendChild(sw)}
+  host.appendChild(ctrl);host.appendChild(opt);host.appendChild(ro);
+  const chk=()=>{if(moved.has('x')&&(!o.switchable||moved.size>=3)){ctx.done();const q=ctx.q('#qz');if(q)q.hidden=false}};
+  function render(){dyn.innerHTML='';eye.setAttribute('transform',`translate(${xe} ${ye})`);eye.setAttribute('aria-valuenow',Math.round(xe-cx));
+    $('#xs',ctrl).value=Math.round(xe-cx);
+    const K=48,tr=[];for(let k=0;k<=K;k++)tr.push(trace(kind,xe,-1+2*k/K));
+    const A=tr[0],B=tr[K],ip=imgPlane(kind),yi=SIM.ym-ip.b,an=analyze(kind,xe),m=ip.m,hhI=sh*m;
+    const endOf=t=>t.hit?t.hit:add(t.P,t.dr,280);
+    el('polygon',{points:`${xe},${ye} ${A.P.x},${A.P.y} ${B.P.x},${B.P.y}`,class:'bundle'},dyn);
+    el('polygon',{points:`${A.P.x},${A.P.y} ${endOf(A).x},${endOf(A).y} ${endOf(B).x},${endOf(B).y} ${B.P.x},${B.P.y}`,class:'bundle'},dyn);
+    if(an.hi>=an.lo){if(an.lo>-half)el('rect',{x:cx-half,y:ys,width:an.lo+half,height:sh,class:'dimmer'},dyn);
+      if(an.hi<half)el('rect',{x:cx+an.hi,y:ys,width:half-an.hi,height:sh,class:'dimmer'},dyn);
+      [an.lo,an.hi].forEach(u=>seg(dyn,{x:cx+u,y:ys-8},{x:cx+u,y:ys+sh+8},'edge'))}
+    else el('rect',{x:cx-half,y:ys,width:2*half,height:sh,class:'dimmer'},dyn);
+    if(showImg){
+      const gf=el('g',{opacity:.2,transform:`translate(${cx} ${yi-hhI/2}) scale(${m}) translate(${-cx} ${-(ys+sh/2)})`},dyn);wordG(gf,'var(--img)','var(--img)');
+      for(let k=0;k<K;k++){const a=tr[k],b=tr[k+1];
+        if(a.valid&&b.valid&&Math.abs(b.u-a.u)>.01){let p=a,q=b;if(p.xi>q.xi){p=b;q=a}
+          const w=q.xi-p.xi,sx=w/(q.u-p.u);
+          const ns=el('svg',{x:p.xi.toFixed(1),y:(yi-hhI).toFixed(1),width:(w+.8).toFixed(1),height:hhI.toFixed(1),overflow:'hidden'},dyn);
+          const gg=el('g',{transform:`translate(0 ${hhI/2}) scale(${sx} ${m}) translate(${-(cx+p.u)} ${-(ys+sh/2)})`},ns);wordG(gg,'var(--img)',null)}
+        else el('rect',{x:Math.min(a.xi,b.xi).toFixed(1),y:(yi-hhI).toFixed(1),width:(Math.abs(a.xi-b.xi)+.8).toFixed(1),height:hhI.toFixed(1),fill:'#8a96a1',opacity:.45},dyn)}
+      txt(dyn,cx,yi-hhI-10,'Spiegelbild','lbl-img');
+      [A,B].forEach(t=>seg(dyn,{x:t.xi,y:yi-hhI-4},{x:t.xi,y:yi+4},'edge'))}
+    if(showExt)[A,B].forEach(t=>seg(dyn,t.P,{x:t.xi,y:yi},'ext'));
+    [A,B].forEach(t=>{seg(dyn,{x:xe,y:ye},t.P,'ray');arrowAt(dyn,{x:xe,y:ye},t.P,.55);seg(dyn,t.P,endOf(t),'ray');arrowAt(dyn,t.P,endOf(t),.5)});
+        ro.innerHTML=`<span>Der Beobachter sieht <b>${fmt(an.vis)} cm</b> von ${2*half/SC} cm des Schriftzugs${an.hi>=an.lo?` (von ${fmt((an.lo+half)/SC)} cm bis ${fmt((an.hi+half)/SC)} cm)`:''}</span>`+
+      `<span>Das Spiegelbild liegt <b>${fmt(an.b)} cm hinter dem Spiegel</b></span><span>Das Spiegelbild ist <b>${Math.abs(an.m-1)<.02?'so groß wie der Gegenstand':an.m>1?'vergrößert (×'+fmt(an.m)+')':'verkleinert (×'+fmt(an.m)+')'}</b></span>`+
+      (an.bad?'<span style="flex-basis:100%;color:var(--muted)">Grau im Spiegelbild: Dort zeigt der Spiegel etwas, das außerhalb des Schriftzugs liegt.</span>':'');
+    o.onUpdate&&o.onUpdate(xe-cx)}
+  dragger(svg,picker('.eye'),p=>{xe=clamp(p.x,cx-320,cx+320);moved.add('x');render();chk()});
+  eye.addEventListener('keydown',e=>{const k=e.key;if(k!=='ArrowLeft'&&k!=='ArrowRight')return;e.preventDefault();xe=clamp(xe+(k==='ArrowLeft'?-1:1)*(e.shiftKey?40:10),cx-320,cx+320);moved.add('x');render();chk()});
+  $('#xs',ctrl).oninput=e=>{xe=cx+(+e.target.value);moved.add('x');render();chk()};
+  $('#cE',opt).onchange=e=>{showExt=e.target.checked;render()};$('#cI',opt).onchange=e=>{showImg=e.target.checked;render()};
+  drawMirrorSim();render()}
+
+/* ===== Übersicht der Antworten ===== */
+function figAnswers(host,ctx){
+  const n=QS.length,okN=QS.filter(q=>ans[q.id]&&ans[q.id].ok).length,did=QS.filter(q=>ans[q.id]).length;
+  const wrap=html(`<div><h2 style="font-size:1.2rem;margin:.2em 0">Deine Antworten</h2><p><b>${okN} von ${n}</b> Aufgaben richtig. ${did<n?`${n-did} noch nicht bearbeitet (die Zusatzseiten sind freiwillig).`:'Alle Aufgaben bearbeitet. Super!'}</p><div class="scroll"><table class="tbl ans"><thead><tr><th>Aufgabe</th><th>Deine Antwort</th><th></th></tr></thead><tbody></tbody></table></div><p><button class="btn chip" id="clr" type="button">Antworten löschen</button></p></div>`);
+  const tb=$('tbody',wrap);
+  QS.forEach(q=>{const a=ans[q.id],qt=q.type==='q'?q.q:q.text.replace(/\{\d+\}/g,'…');
+    tb.appendChild(html(`<tr><td><span class="pg">${q.pg}</span>${qt}</td><td>${a?a.a:'<span class="hint">noch nicht beantwortet</span>'}</td><td class="${a?(a.ok?'ok':'no'):''}">${a?(a.ok?'✓':'✗'):''}</td></tr>`))});
+  host.appendChild(wrap);
+  $('#clr',wrap).onclick=()=>{ans={};try{localStorage.removeItem('spiegel-ans')}catch(e){}render()};
+  ctx.done()}
+
+/* ===== Seiten ===== */
+const PAGES=[];const page=o=>PAGES.push(o);
+const K1='Kapitel 1 · Das Lot am Hohlspiegel',K2='Kapitel 2 · Der Brennpunkt',K3='Kapitel 3 · Das Spiegelbild',K4='Zum Schluss',KZ='Zusatz für Schnelle · Bilder zeichnen';
+
+page({id:'cover',ch:'',title:'Hohl- und Wölbspiegel',
+html:`<p class="lead">Im Löffel stehst du auf dem Kopf. An der Kreuzung hängt ein runder Spiegel. Warum ist das so?</p>
+<p>Du kennst das Reflexionsgesetz vom ebenen Spiegel. Jetzt untersuchst du runde Spiegel:</p>
+<ol class="steps"><li>Du zeichnest das <b>Lot</b> am Hohlspiegel.</li><li>Damit findest du den <b>Brennpunkt</b>.</li><li>Du vergleichst, was ein Beobachter in verschiedenen Spiegeln sieht.</li><li>Zusatz für Schnelle: Du zeichnest Bilder.</li></ol>
+<p class="hint">Blättere mit den Knöpfen unten, mit den Pfeiltasten oder durch Wischen auf dieser Seite. Die Zeichnungen rechts kannst du anfassen und verändern.</p>
+<p><button class="btn pri" type="button" data-go="1">Los geht’s ›</button></p>`,
+init:c=>figCover(c.fig)});
+
+page({id:'refl',ch:K1,title:'Das Reflexionsgesetz',
+html:`<p>Ein Lichtstrahl trifft auf einen Spiegel und springt weg. Das nennt man <b>Reflexion</b>. Dabei hilft dir das <b>Lot</b>. Es steht <b>senkrecht</b> (90°) auf dem Spiegel.</p>
+<div class="merke"><b>Reflexionsgesetz</b><br>Der Einfallswinkel α und der Ausfallswinkel β sind gleich groß: <b>α = β</b>. Du misst beide vom Lot aus.</div>
+<div class="task"><b>Aufgabe:</b> Ziehe die Lichtquelle am Kreis. Was passiert mit β, wenn du α änderst?</div>
+<p class="status" id="st" aria-live="polite"></p>
+<div id="qz"></div>
+<p>Beim ebenen Spiegel zeigt das Lot überall in dieselbe Richtung. Wie ist das bei einem runden Spiegel? Das findest du auf den nächsten Seiten heraus.</p>`,
+init:c=>{figPlane(c.fig,c);cloze(c.q('#qz'),'refl',c)}});
+
+page({id:'terms',ch:K1,title:'Der Hohlspiegel',
+html:`<p>Ein <b>Hohlspiegel</b> ist ein Stück von einer Kugel. Er ist innen verspiegelt. In der Zeichnung siehst du ihn von der Seite.</p>
+<div class="task"><b>Aufgabe:</b> Tippe nacheinander auf alle fünf Begriffe. Sie leuchten dann in der Zeichnung auf.</div>
+<div class="chips" id="chips"></div><div class="defbox" id="def">Wähle einen Begriff.</div>
+<div id="qz"></div>`,
+init:c=>{figTerms(c.fig,c);quiz(c.q('#qz'),'terms',c)}});
+
+page({id:'lot',ch:K1,title:'Das Lot am Hohlspiegel',
+html:`<p>Der Hohlspiegel ist rund. An einer ganz kleinen Stelle sieht er aber fast gerade aus (gestrichelte Linie). Dort kannst du das Lot einzeichnen.</p>
+<div class="merke"><b>Das Lot</b> steht senkrecht (90°) auf dem Spiegel. Beim runden Spiegel gilt das an der kleinen geraden Stelle im Punkt P.</div>
+<div class="task"><b>Aufgabe:</b> Drehe am roten Griff, bis das Lot genau 90° zur gestrichelten Linie hat. Mache das für beide Punkte.</div>
+<p class="status" id="st" aria-live="polite"></p>
+<div class="merke" id="rev" hidden><b>Entdeckung:</b> Beide Lote treffen sich in einem Punkt: dem Mittelpunkt <b>M</b>. Das Lot geht beim Hohlspiegel also immer durch M.</div>
+<div id="qz" hidden></div>`,
+init:c=>{figLot(c.fig,c);cloze(c.q('#qz'),'lot',c)}});
+
+page({id:'par',ch:K2,title:'Parallele Strahlen',
+html:`<p>Parallele Strahlen kommen von links, so wie Sonnenlicht. Wohin werden sie am Hohlspiegel reflektiert? Mit dem Lot findest du es heraus:</p>
+<ol class="steps"><li><b>Lot zeichnen:</b> Tippe auf M. Das Lot geht durch P und M.</li><li><b>Strahl drehen:</b> Drehe den reflektierten Strahl am Griff, bis β so groß ist wie α.</li><li><b>Beobachten:</b> Wo trifft der Strahl die optische Achse?</li></ol>
+<p>Mache das für beide Strahlen.</p>
+<div class="btnrow"><button class="btn" id="bLot" type="button">Lot einzeichnen</button></div>
+<p class="status" id="st" aria-live="polite"></p>
+<div id="rev" hidden><div class="merke"><b>Entdeckung:</b> Beide Strahlen laufen (fast) durch denselben Punkt. Das ist der <b>Brennpunkt F</b>. Er liegt ungefähr in der Mitte zwischen S und M.</div>
+<details class="more"><summary>Warum „fast“?</summary><p>Je weiter ein Strahl von der Achse entfernt ist, desto weiter vorn trifft er die Achse. Das liegt an der Rundung des Spiegels. Für uns gilt: Die Strahlen treffen sich ungefähr in F.</p></details>
+<div id="qz"></div></div>`,
+init:c=>{figParallel(c.fig,c);cloze(c.q('#qz'),'par',c)}});
+
+page({id:'focal',ch:K2,title:'Brennpunkt und Brennweite',
+html:`<div class="merke"><b>Brennpunkt F</b><br>Parallele Strahlen laufen nach der Reflexion durch F. Der Abstand von S bis F heißt <b>Brennweite f</b>.</div>
+<div class="task"><b>Experiment:</b> Stelle mit dem Regler verschiedene Radien r ein. Lies am Lineal ab, wo F liegt. Drücke jedes Mal auf „Notieren“. Notiere mindestens drei Werte.</div>
+<div id="obs" hidden><div class="merke"><b>Beobachtung:</b> Die Brennweite f ist immer halb so groß wie der Radius r. F liegt genau in der Mitte zwischen S und M.</div></div>
+<div id="qz"></div><div id="qz2"></div>`,
+init:c=>{figFocal(c.fig,c);quiz(c.q('#qz'),'foc1',c);cloze(c.q('#qz2'),'foc2',c)}});
+
+page({id:'obs1',ch:K3,title:'Was sieht der Beobachter im Planspiegel?',
+html:`<p>Du schaust jetzt von oben auf einen Spiegel. Unten steht ein Beobachter. Vor dem Spiegel steht ein <b>Schriftzug</b> (der Gegenstand).</p>
+<p>Vom Auge gehen zwei <b>Randstrahlen</b> zum Spiegel. Sie werden reflektiert und treffen den Schriftzug. Den Teil dazwischen sieht der Beobachter im Spiegel. Der Rest ist abgedunkelt.</p>
+<p>Hinter dem Spiegel zeigen die gestrichelten Linien, wo das <b>Spiegelbild</b> liegt.</p>
+<div class="task"><b>Aufgabe:</b> Ziehe den Beobachter nach links und rechts. Was verändert sich? Wo liegt das Spiegelbild?</div>
+<div id="qz"></div>
+<details class="more"><summary>Lösung anzeigen</summary><p>Der sichtbare Teil wandert, seine Größe bleibt gleich. Das Spiegelbild liegt genauso weit hinter dem Spiegel, wie der Schriftzug davor steht. Es ist genauso groß wie der Schriftzug.</p></details>
+`,
+init:c=>{figObserver(c.fig,c,{kind:'plane',switchable:false});quiz(c.q('#qz'),'o1',c)}});
+
+page({id:'obs2',ch:K3,title:'Was sieht der Beobachter im Hohlspiegel?',
+html:`<p>Jetzt ist der Spiegel ein <b>Hohlspiegel</b>. Der Schriftzug steht nah vor dem Spiegel.</p>
+<div class="task"><b>Aufgabe:</b> Ziehe den Beobachter hin und her. Wechsle zwischendurch zum Planspiegel und wieder zurück. Vergleiche: Wie viel vom Schriftzug siehst du? Ist das Spiegelbild größer oder kleiner?</div>
+<div id="qz"></div>
+<details class="more"><summary>Lösung anzeigen</summary><p>Im Hohlspiegel siehst du weniger vom Schriftzug. Das Spiegelbild ist größer (etwa doppelt so groß) und liegt weit hinter dem Spiegel.</p></details>
+`,
+init:c=>{figObserver(c.fig,c,{kind:'concave',switchable:true});cloze(c.q('#qz'),'o2',c)}});
+
+page({id:'obs3',ch:K3,title:'Was sieht der Beobachter im Wölbspiegel?',
+html:`<p>Beim <b>Wölbspiegel</b> wölbt sich der Spiegel zum Beobachter hin. Die Randstrahlen laufen nach der Reflexion auseinander. Der Schriftzug ist hier breiter, damit du den ganzen sichtbaren Teil siehst.</p>
+<div class="task"><b>Aufgabe:</b> Ziehe den Beobachter hin und her und vergleiche mit den anderen Spiegeln. Wie viel vom Schriftzug siehst du? Ist das Spiegelbild größer oder kleiner?</div>
+<div id="qz"></div>
+<details class="more"><summary>Lösung anzeigen</summary><p>Im Wölbspiegel siehst du am meisten vom Schriftzug. Das Spiegelbild ist kleiner (etwa zwei Drittel) und liegt nah hinter dem Spiegel.</p></details>
+<p class="hint">Darum hängen an unübersichtlichen Kreuzungen Wölbspiegel.</p>
+`,
+init:c=>{figObserver(c.fig,c,{kind:'convex',switchable:true});cloze(c.q('#qz'),'o3',c)}});
+
+page({id:'cmp',ch:K3,title:'Die drei Spiegel im Vergleich',
+html:`<p>Hier stehen die Werte aller drei Spiegel nebeneinander. Die Spalte des gewählten Spiegels ist hervorgehoben.</p>
+<div class="task"><b>Aufgabe:</b> Wechsle zwischen den Spiegeln, verschiebe den Beobachter und beantworte die Fragen.</div>
+<div id="qz"></div><div id="qz2"></div><div id="qz3"></div>`,
+init:c=>{const tbl=html(`<div class="scroll"><table class="tbl"><thead><tr><th></th><th data-k="plane">Planspiegel</th><th data-k="concave">Hohlspiegel</th><th data-k="convex">Wölbspiegel</th></tr></thead><tbody>
+<tr><th>Sichtbarer Teil</th><td data-k="plane" data-r="vis"></td><td data-k="concave" data-r="vis"></td><td data-k="convex" data-r="vis"></td></tr>
+<tr><th>Lage des Spiegelbilds</th><td data-k="plane" data-r="b"></td><td data-k="concave" data-r="b"></td><td data-k="convex" data-r="b"></td></tr>
+<tr><th>Größe des Spiegelbilds</th><td data-k="plane" data-r="m"></td><td data-k="concave" data-r="m"></td><td data-k="convex" data-r="m"></td></tr>
+<tr><th>Beispiel</th><td data-k="plane">Badspiegel</td><td data-k="concave">Rasierspiegel</td><td data-k="convex">Verkehrsspiegel</td></tr></tbody></table></div>`);
+  let sel='plane';const hl=()=>tbl.querySelectorAll('[data-k]').forEach(x=>x.classList.toggle('hl',x.dataset.k===sel));
+  const upd=off=>{const xe=SIM.cx+off;['plane','concave','convex'].forEach(k=>{const a=analyze(k,xe);
+    tbl.querySelector(`td[data-k=${k}][data-r=vis]`).textContent=fmt(a.vis)+' cm von '+(2*SIM.half/SC)+' cm';
+    tbl.querySelector(`td[data-k=${k}][data-r=b]`).textContent=fmt(a.b)+' cm hinter dem Spiegel';
+    tbl.querySelector(`td[data-k=${k}][data-r=m]`).textContent=Math.abs(a.m-1)<.02?'so groß wie der Gegenstand':(a.m>1?'vergrößert ×':'verkleinert ×')+fmt(a.m)});hl()};
+  figObserver(c.fig,c,{kind:'plane',switchable:true,onUpdate:upd});
+  c.fig.appendChild(tbl);
+  c.fig.querySelectorAll('.chips [data-k]').forEach(b=>b.addEventListener('click',()=>{sel=b.dataset.k;hl()}));hl();
+  quiz(c.q('#qz'),'c1',c);quiz(c.q('#qz2'),'c2',c);quiz(c.q('#qz3'),'c3',c)}});
+
+page({id:'sum',ch:K4,title:'Das Wichtigste und deine Antworten',
+html:`<div class="merke"><b>Merke</b><ul style="margin:.4em 0 0;padding-left:1.2em"><li>Das <b>Lot</b> steht senkrecht auf dem Spiegel. Beim Hohlspiegel geht es durch den Mittelpunkt M.</li><li>Parallele Strahlen laufen nach der Reflexion durch den <b>Brennpunkt F</b>.</li><li>Die Brennweite f ist halb so groß wie der Radius r.</li><li>Steht der Gegenstand nah am Hohlspiegel, ist das Spiegelbild <b>größer</b>. Man sieht aber nur <b>wenig</b>.</li><li>Im Wölbspiegel ist das Spiegelbild <b>kleiner</b>. Man sieht aber <b>viel</b>.</li></ul></div>
+<p>Rechts siehst du alle deine Antworten. Mit den Punkten unten kannst du zu einer Seite zurückspringen und Fehler verbessern.</p>
+<p>Auf den nächsten Seiten warten Zusatzaufgaben für Schnelle: Du zeichnest Bilder an Hohl- und Wölbspiegel. Das ist schwerer.</p>
+<p><button class="btn" type="button" data-go="0">‹ Zurück zum Anfang</button></p>`,
+init:c=>figAnswers(c.fig,c)});
+
+page({id:'rules',ch:KZ,title:'Drei Strahlen, die du kennen musst',
+html:`<p><b>Zusatz für Schnelle.</b> Um Bilder zu zeichnen, brauchst du drei Strahlen, deren Weg du genau kennst.</p>
+<div class="task"><b>Aufgabe:</b> Wähle einen Strahl. Ziehe den Gegenstand (orange) an andere Stellen. Sieh dir alle drei Strahlen an.</div>
+<div class="chips" id="tabs"></div><div class="defbox" id="rule"></div>
+<div id="qz"></div>`,
+init:c=>{figRules(c.fig,c);quiz(c.q('#qz'),'z1',c)}});
+
+page({id:'img1',ch:KZ,title:'Das Bild im Hohlspiegel',
+html:`<p>Ein Gegenstand (Pfeil) steht vor dem Hohlspiegel. Das <b>Bild</b> entsteht dort, wo sich die reflektierten Strahlen treffen. Liegt der Treffpunkt vor dem Spiegel, kannst du das Bild auf einem Schirm auffangen. Man sagt: Das Bild ist <b>reell</b>.</p>
+<div class="task"><b>Aufgabe:</b> Blende ① den Parallelstrahl und ② den Brennpunktstrahl ein. Zeige dann ③ das Bild. Verschiebe den Gegenstand.</div>
+<p class="hint">Tipp: Bei g = 14 cm steht der Gegenstand im Mittelpunkt M.</p>
+<div id="qz"></div>`,
+init:c=>{figImage(c.fig,c,{kind:'concave',g0:20});quiz(c.q('#qz'),'z2',c)}});
+
+page({id:'img2',ch:KZ,title:'Der Gegenstand steht nah am Spiegel',
+html:`<p>Steht der Gegenstand näher am Spiegel als der Brennpunkt (g ist kleiner als f), laufen die reflektierten Strahlen auseinander.</p>
+<p>Verlängerst du sie nach hinten (gestrichelt), treffen sie sich <b>hinter dem Spiegel</b>. Dort sieht dein Auge das Bild. Es ist nur im Spiegel zu sehen: Das Bild ist <b>virtuell</b>. Das kennst du vom Rasierspiegel.</p>
+<div class="task"><b>Aufgabe:</b> Zeige alle Strahlen und das Bild. Verschiebe den Gegenstand bis kurz vor F (g = 6 cm). Was passiert mit dem Bild?</div>
+<div id="qz"></div>`,
+init:c=>{figImage(c.fig,c,{kind:'concave',g0:4});quiz(c.q('#qz'),'z3',c)}});
+
+page({id:'img3',ch:KZ,title:'Das Bild im Wölbspiegel',
+html:`<p>Der Wölbspiegel wölbt sich zu dir hin. Mittelpunkt M und Brennpunkt F liegen <b>hinter</b> dem Spiegel. Das Lot zeigt von M weg.</p>
+<p>Die reflektierten Strahlen laufen auseinander. Sie sehen so aus, als kämen sie von F.</p>
+<div class="task"><b>Aufgabe:</b> Zeichne das Bild mit dem Parallelstrahl und dem Brennpunktstrahl. Verschiebe den Gegenstand. Wird das Bild irgendwo reell?</div>
+<div id="qz"></div>`,
+init:c=>{figImage(c.fig,c,{kind:'convex',g0:10});quiz(c.q('#qz'),'z4',c)}});
+
+['cover','lot','par','sum'].forEach(id=>{PAGES.find(p=>p.id===id).act=false});
+/* ===== Blättern ===== */
+const book=$('#book'),pl=$('#pl'),pr=$('#pr');let cur=0;
+try{const s=+localStorage.getItem('spiegel-page');if(s>=0&&s<PAGES.length&&PAGES.slice(0,s).every(p=>doneMap[p.id]))cur=s}catch(e){}
+function render(dir){const p=PAGES[cur];
+  $('#run').textContent=(p.ch?p.ch+' · ':'')+'Seite '+(cur+1)+' von '+PAGES.length;
+  book.classList.remove('flip-next','flip-prev');void book.offsetWidth;if(dir)book.classList.add(dir>0?'flip-next':'flip-prev');
+  pl.innerHTML=`<div class="kap">${p.ch||'Lernbuch Optik'}</div><h1>${p.title}</h1>${p.html}<p class="hint lockmsg" id="lockmsg" aria-live="polite"></p><div class="pno">${cur+1}</div>`;
+  pr.innerHTML='';const fig=html('<div class="fig"></div>');pr.appendChild(fig);
+  const ctx={fig,left:pl,q:s=>$(s,pl),need:new Set(p.act===false?[]:['act']),got:new Set(),page:p};
+  ctx.done=(k='act')=>{ctx.got.add(k);if([...ctx.need].every(x=>ctx.got.has(x)))markDone(p.id);renderDots()};
+  try{p.init&&p.init(ctx)}catch(err){console.error(err);fig.textContent='Diese Seite konnte nicht aufgebaut werden: '+err.message}
+  if(!ctx.need.size)markDone(p.id);
+  renderDots();
+  try{localStorage.setItem('spiegel-page',cur)}catch(e){}}
+const unlocked=i=>PAGES.slice(0,i).every(p=>doneMap[p.id]);
+function go(i){if(i<0||i>=PAGES.length||i===cur)return;if(i>cur&&!unlocked(i)){const m=$('#lockmsg');if(m)m.textContent='Bearbeite zuerst die Aufgaben auf dieser Seite. Dann kannst du weiterblättern.';return}const dir=i>cur?1:-1;cur=i;render(dir);window.scrollTo(0,0)}
+function renderDots(){const d=$('#dots');d.innerHTML='';const blocked=!doneMap[PAGES[cur].id];$('#prev').disabled=cur===0;$('#next').disabled=cur===PAGES.length-1||blocked;const lm=$('#lockmsg');if(lm)lm.textContent=(blocked&&cur<PAGES.length-1)?'Bearbeite zuerst die Aufgaben auf dieser Seite. Dann kannst du weiterblättern.':'';PAGES.forEach((p,i)=>{const b=html(`<button class="dot" type="button" aria-label="Seite ${i+1}: ${p.title}"></button>`);
+  if(doneMap[p.id])b.classList.add('done');if(i===cur)b.classList.add('cur');if(i>cur&&!unlocked(i))b.classList.add('lock');b.onclick=()=>go(i);d.appendChild(b)})}
+$('#prev').onclick=()=>go(cur-1);$('#next').onclick=()=>go(cur+1);
+pl.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)go(+b.dataset.go)});
+document.addEventListener('keydown',e=>{if(e.target.closest&&e.target.closest('input,textarea,select,[data-keys]'))return;if(!$('#toc').hidden){if(e.key==='Escape')$('#toc').hidden=true;return}
+  if(e.key==='ArrowRight'||e.key==='PageDown')go(cur+1);else if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1)});
+let sx=null,sy=null,st0=0,sid=null;
+pl.addEventListener('pointerdown',e=>{sx=null;if(e.pointerType==='mouse'||e.target.closest('button,input,select,option,summary,a,label'))return;sx=e.clientX;sy=e.clientY;st0=Date.now();sid=e.pointerId});
+pl.addEventListener('pointercancel',()=>{sx=null});
+pl.addEventListener('pointerup',e=>{if(sx===null||e.pointerId!==sid)return;const dx=e.clientX-sx,dy=e.clientY-sy,fast=Date.now()-st0<700;sx=null;
+  if(e.target.closest('button,input,select,option,summary,a,label'))return;
+  if(fast&&Math.abs(dx)>90&&Math.abs(dy)<40&&Math.abs(dx)>2.5*Math.abs(dy))go(cur+(dx<0?1:-1))});
+function openToc(){const l=$('#tocList');l.innerHTML='';let last=null;
+  PAGES.forEach((p,i)=>{const ch=p.ch||'Titelseite';if(ch!==last){l.appendChild(html(`<h3>${ch}</h3>`));last=ch}
+    const b=html(`<button class="entry" type="button"><span class="n">${i+1}</span><span>${p.title}</span>${doneMap[p.id]?'<span class="ck" aria-label="erledigt">✓</span>':''}</button>`);
+    b.onclick=()=>{$('#toc').hidden=true;go(i)};l.appendChild(b)});
+  $('#toc').hidden=false;$('#tocClose').focus()}
+$('#tocBtn').onclick=openToc;$('#tocClose').onclick=()=>{$('#toc').hidden=true};$('#toc').addEventListener('click',e=>{if(e.target.id==='toc')$('#toc').hidden=true});
+render(0);
+})();
+</script>
+
+</body></html>
